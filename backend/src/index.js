@@ -37,7 +37,7 @@ app.use('/api/v1/agents', agentRoutes);
 mongoose.connect(process.env.MONGODB_URL)
     .then(() => {
         console.log("Connected to MongoDB");
-        const PORT = process.env.PORT || 8000;
+        const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
             console.log(`Server is ready at http://localhost:${PORT}/api/v1`);
         });
