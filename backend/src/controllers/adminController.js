@@ -31,19 +31,16 @@ const updatePolicySchema = Joi.object({
 const adminController = {
     async allClaims(req, res) {
         try {
+            console.log('Loading all claims...');
             const Claim = (await import('../models/claim.js')).default;
-            const claims = await Claim.find()
-                .populate('userId')
-                .populate({
-                    path: 'userPolicyId',
-                    populate: {
-                        path: 'policyProductId',
-                        model: 'PolicyProduct'
-                    }
-                })
-                .populate('decidedByAgentId');
-            res.json({ success: true, claims });
+            
+            // Simple query without population for testing
+            const claims = await Claim.find().lean();
+            console.log(`Found ${claims.length} claims`);
+            
+            res.json({ success: true, claims: claims || [] });
         } catch (err) {
+            console.error('Error in allClaims:', err);
             res.status(500).json({ success: false, error: err.message });
         }
     },
@@ -235,18 +232,18 @@ const adminController = {
             }
             console.log('Agent found:', agent.name);
             
-            // Update policy with agent info
+            // Update policy with agent info and set status to Approved
             policyProduct.assignedAgentId = agentId;
             policyProduct.assignedAgentName = agent.name;
-            
-            console.log('Saving policy with assigned agent:', {
+            policyProduct.status = 'Approved';
+            console.log('Saving policy with assigned agent and status Approved:', {
                 policyId: policyProduct._id,
                 assignedAgentId: agentId,
-                assignedAgentName: agent.name
+                assignedAgentName: agent.name,
+                status: policyProduct.status
             });
-            
             await policyProduct.save();
-            console.log('Policy saved successfully');
+            console.log('Policy saved successfully with status Approved');
             
             // Verify the update by checking all policies
             const allPoliciesAfterUpdate = await PolicyProduct.find().sort({ createdAt: -1 });

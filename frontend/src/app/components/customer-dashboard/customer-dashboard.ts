@@ -145,6 +145,11 @@ export class CustomerDashboard implements OnInit {
     this.loadApprovedPolicies();
   }
 
+  showBuyPolicy() {
+    this.currentSection = 'buyPolicy';
+    this.loadApprovedPolicies();
+  }
+
   showPayments() {
     this.currentSection = 'payments';
     this.loadMyPolicies(); // Load policies that can receive payments

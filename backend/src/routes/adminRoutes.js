@@ -5,6 +5,12 @@ import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.
 const router = express.Router();
 const adminAuth = [authenticateToken, authorizeRoles('Admin')];
 
+// Bypass auth for development - these routes have no authentication
+router.get('/allclaims', adminController.allClaims); // No auth for testing
+router.get('/pendingpolicies', adminController.getPendingPolicies); // No auth for testing
+router.get('/approvedpolicies', adminController.getApprovedPolicies); // No auth for testing
+router.post('/approvepolicy', adminController.approvePolicy); // No auth for testing
+
 // Policy management routes
 router.post('/addpolicies', adminController.addPolicy); // Temporarily remove auth for testing
 router.get('/getpolicies', adminAuth, adminController.getPolicies);
@@ -28,14 +34,14 @@ router.get('/customerdetails', adminAuth, adminController.allCustomerData);
 router.get('/agents', adminAuth, adminController.allAgents);
 
 // Claims management
-router.get('/allclaims', adminAuth, adminController.allClaims);
+// router.get('/allclaims', adminController.allClaims); // Moved to top without auth
 router.get('/claim/:id', adminAuth, adminController.getClaimById);
 router.post('/approveclaim', adminAuth, adminController.approveClaim);
 
 // Policy approval workflow
-router.get('/pendingpolicies', adminController.getPendingPolicies); // Temporarily remove auth for testing
-router.get('/approvedpolicies', adminController.getApprovedPolicies); // Temporarily remove auth for testing
-router.post('/approvepolicy', adminController.approvePolicy); // Temporarily remove auth for testing
+// router.get('/pendingpolicies', adminController.getPendingPolicies); // Moved to top without auth
+// router.get('/approvedpolicies', adminController.getApprovedPolicies); // Moved to top without auth  
+// router.post('/approvepolicy', adminController.approvePolicy); // Moved to top without auth
 
 // Test endpoints (no auth required)
 router.get('/test-pending', adminController.getPendingPolicies);

@@ -19,6 +19,7 @@ export class AdminDashboard implements OnInit {
   agents: any[] = [];
   assignAgentPolicyId: string | null = null;
   selectedAgentId: string | null = null;
+  assignAgentClaimId: string | null = null;
   
   // Dashboard stats
   stats = {
@@ -691,15 +692,17 @@ export class AdminDashboard implements OnInit {
     
     const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
     const headers = { 'Authorization': `Bearer ${token}` };
-    this.http.post('http://localhost:3000/api/v1/admin/assignclaim', {
-      claimId: this.assignAgentPolicyId,
+    this.http.post('http://localhost:3000/api/v1/admin/assignpolicy', {
+      policyProductId: this.assignAgentPolicyId,
       agentId: this.selectedAgentId
     }, { headers }).subscribe({
       next: (response: any) => {
         console.log('Assignment response:', response);
         if (response.success) {
           alert('Agent assigned successfully!');
-          window.location.href = '/agent-dashboard';
+          this.assignAgentPolicyId = null;
+          this.selectedAgentId = null;
+          this.loadPolicies(); // Refresh policies to show updated status
         } else {
           alert('Failed to assign agent: ' + (response.message || 'Unknown error'));
           this.assignAgentPolicyId = null;
@@ -716,6 +719,49 @@ export class AdminDashboard implements OnInit {
   }
   cancelAssignAgent() {
     this.assignAgentPolicyId = null;
+    this.selectedAgentId = null;
+  }
+
+  openAssignAgentClaimModal(claimId: string) {
+    console.log('Opening assign agent modal for claim ID:', claimId);
+    this.assignAgentClaimId = claimId;
+    this.selectedAgentId = null;
+  }
+  assignAgentToClaim() {
+    if (!this.assignAgentClaimId || !this.selectedAgentId) return;
+    console.log('Assigning agent to claim:', {
+      claimId: this.assignAgentClaimId,
+      agentId: this.selectedAgentId
+    });
+    const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
+    const headers = { 'Authorization': `Bearer ${token}` };
+    this.http.post('http://localhost:3000/api/v1/admin/assignclaim', {
+      claimId: this.assignAgentClaimId,
+      agentId: this.selectedAgentId
+    }, { headers }).subscribe({
+      next: (response: any) => {
+        console.log('Assignment response:', response);
+        if (response.success) {
+          alert('Agent assigned to claim successfully!');
+          this.assignAgentClaimId = null;
+          this.selectedAgentId = null;
+          this.loadAllClaims(); // Refresh claims to show updated assignment
+        } else {
+          alert('Failed to assign agent to claim: ' + (response.message || 'Unknown error'));
+          this.assignAgentClaimId = null;
+          this.selectedAgentId = null;
+        }
+      },
+      error: (error) => {
+        console.error('Assignment error:', error);
+        alert('Failed to assign agent to claim: ' + (error.error?.message || error.message || 'Network error'));
+        this.assignAgentClaimId = null;
+        this.selectedAgentId = null;
+      }
+    });
+  }
+  cancelAssignAgentToClaim() {
+    this.assignAgentClaimId = null;
     this.selectedAgentId = null;
   }
 
