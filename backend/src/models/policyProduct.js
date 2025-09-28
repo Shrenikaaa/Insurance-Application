@@ -10,42 +10,44 @@ const PolicyProductSchema = new mongoose.Schema({
     ref: 'Agent',
     default: null
   },
-  code: 
-  { 
-    type: String, 
-    required: true, 
-    unique: true 
-},
-  title: 
-  { 
+  code: {
     type: String,
-    required: true 
-    },
-  description: 
-  { 
-    type: String ,
+    required: true,
+    unique: true
+  },
+  title: {
+    type: String,
     required: true
   },
-  premium: 
-  { 
-    type: Number, 
-    required: true 
-    },        // monthly or yearly depending on term
-  termMonths: 
-  { 
-    type: Number, 
-    required: true 
-    },  // duration in months
-  minSumInsured: 
-  { 
-    type: Number, 
-    default: 0 
-    }, // minimum coverage amount
-    createdAt: 
-    { 
-      type: Date,
-      default: Date.now
-    }
+  type: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  termMonths: {
+    type: Number,
+    required: true
+  },
+  tenureMonths: {
+    type: Number,
+    required: true
+  },
+  minSumInsured: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive', 'Approved', 'pending', 'approved'],
+    default: 'Active',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 export default mongoose.model('PolicyProduct', PolicyProductSchema);

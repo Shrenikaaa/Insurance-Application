@@ -1,1 +1,1354 @@
-<p>admin-dashboard works!</p>
+<!-- Admin Dashboard -->
+<div class="min-h-screen bg-gray-100 flex relative">
+  <!-- Sidebar -->
+  <div class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform transition duration-300 ease-in-out z-50" 
+       [ngClass]="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}">
+    <!-- Logo -->
+    <div class="flex items-center justify-between px-4">
+      <div class="flex items-center">
+        <svg class="h-8 w-8 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="text-2xl font-bold">Admin Panel</span>
+      </div>
+      <!-- Toggle button inside sidebar -->
+      <button (click)="toggleSidebar()" 
+              class="text-white hover:text-gray-200 p-1 rounded transition-colors duration-200">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-10">
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+      </a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-users mr-2"></i> Manage Users
+      </a>
+      <a href="javascript:void(0)" (click)="showCustomerDetails(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-user-friends mr-2"></i> Customer Details
+      </a>
+      <a href="javascript:void(0)" (click)="showPolicies(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-shield-alt mr-2"></i> Policies
+      </a>
+      <a href="javascript:void(0)" (click)="showAgents(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-user-tie mr-2"></i> Agents
+      </a>
+      <a href="javascript:void(0)" (click)="showClaims(); $event.preventDefault()" 
+         class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white"
+         [class.bg-gray-700]="currentSection === 'claims'">
+        <i class="fas fa-file-invoice-dollar mr-2"></i> Claims
+      </a>
+      <a href="javascript:void(0)" (click)="showPayments(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-credit-card mr-2"></i> Payments
+      </a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-chart-bar mr-2"></i> Reports
+      </a>
+      <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-cog mr-2"></i> Settings
+      </a>
+      <a href="javascript:void(0)" (click)="showPendingPolicies(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-clock mr-2"></i> Pending Policies
+      </a>
+      <a href="javascript:void(0)" (click)="showApprovedPolicies(); $event.preventDefault()" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-check-circle mr-2"></i> Approved Policies
+      </a>
+    </nav>
+  </div>
+
+  <!-- Toggle Button (appears when sidebar is closed) -->
+  <button (click)="toggleSidebar()" 
+          *ngIf="!sidebarOpen"
+          class="fixed left-4 top-20 z-50 bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg shadow-lg transition-all duration-300">
+    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
+  <!-- Main Content - Fixed position, doesn't move -->
+  <div class="flex-1 flex flex-col overflow-hidden ml-64">
+    <!-- Top Navigation -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-gray-700">Welcome, {{adminName}}</span>
+            <button (click)="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-200">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+      <div class="container mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+          <!-- Total Users -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-orange-500 bg-orange-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM5 17a7.001 7.001 0 1114 0H5z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Total Users</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.totalUsers}}</p>
+            </div>
+          </div>
+
+          <!-- Total Policies -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-green-500 bg-green-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Active Policies</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.totalPolicies}}</p>
+            </div>
+          </div>
+
+          <!-- Pending Claims -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-blue-500 bg-blue-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h6a2 2 0 002-2V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Pending Claims</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.pendingClaims}}</p>
+            </div>
+          </div>
+
+          <!-- Total Agents -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-teal-500 bg-teal-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Active Agents</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.totalAgents}}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Policy Management Section -->
+        <div class="bg-white rounded-lg shadow-xs" *ngIf="showPoliciesSection">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h4 class="text-lg font-semibold text-gray-800">Policy Management</h4>
+            <button (click)="showAddPolicyForm = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
+              <i class="fas fa-plus mr-2"></i>Add New Policy
+            </button>
+          </div>
+          
+          <!-- Add Policy Form -->
+          <div *ngIf="showAddPolicyForm" class="p-4 bg-gray-50 border-b">
+            <h5 class="text-md font-semibold text-gray-700 mb-4">Add New Policy</h5>
+            <form #addPolicyForm="ngForm">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Policy Code</label>
+                  <input type="text" [(ngModel)]="newPolicy.code" name="policyCode"
+                         placeholder="Leave blank for auto-generation (e.g., POL001)" 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Policy Title <span class="text-red-500">*</span></label>
+                  <input type="text" [(ngModel)]="newPolicy.title" name="policyTitle" required 
+                         placeholder="e.g., Basic Life Insurance Plan"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Policy Type <span class="text-red-500">*</span></label>
+                  <select [(ngModel)]="newPolicy.type" name="policyType" required 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select Policy Type</option>
+                    <option value="Life Insurance">Life Insurance</option>
+                    <option value="Health Insurance">Health Insurance</option>
+                    <option value="Auto Insurance">Auto Insurance</option>
+                    <option value="Home Insurance">Home Insurance</option>
+                    <option value="Travel Insurance">Travel Insurance</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Min Sum Insured <span class="text-red-500">*</span></label>
+                  <input type="number" [(ngModel)]="newPolicy.minSumInsured" name="minSumInsured" required min="1" step="0.01"
+                         placeholder="10000.00"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Term (Months) <span class="text-red-500">*</span></label>
+                  <input type="number" [(ngModel)]="newPolicy.termMonths" name="termMonths" required min="1" max="600"
+                         placeholder="12"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Tenure (Months) <span class="text-red-500">*</span></label>
+                  <input type="number" [(ngModel)]="newPolicy.tenureMonths" name="tenureMonths" required min="1" max="600"
+                         placeholder="24"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Description <span class="text-red-500">*</span></label>
+                  <textarea [(ngModel)]="newPolicy.description" name="description" required rows="3" 
+                            placeholder="Detailed description of the policy coverage and benefits..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+              </div>
+              <div class="mt-4 flex space-x-3">
+                <button type="button" (click)="addPolicy()"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
+                  <i class="fas fa-save mr-2"></i>Save Policy
+                </button>
+                <button type="button" (click)="cancelAddPolicy()" 
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200">
+                  <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Policies List -->
+          <div class="p-4">
+            <!-- Search and Filter -->
+            <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex-1">
+                <input type="text" [(ngModel)]="policySearchTerm" (input)="filterPolicies()" 
+                       placeholder="Search policies..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <select [(ngModel)]="policyFilter" (change)="filterPolicies()" 
+                        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">All Types</option>
+                  <option value="Life Insurance">Life Insurance</option>
+                  <option value="Health Insurance">Health Insurance</option>
+                  <option value="Auto Insurance">Auto Insurance</option>
+                  <option value="Home Insurance">Home Insurance</option>
+                  <option value="Travel Insurance">Travel Insurance</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Policies Table -->
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Sum Insured</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Agent</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr *ngFor="let policy of filteredPolicies; trackBy: trackByPolicy">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div class="text-sm font-medium text-gray-900">{{policy.name || policy.title}}</div>
+                        <div class="text-sm text-gray-500">ID: {{policy._id}}</div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{policy.type}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{policy.minSumInsured | number}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" 
+                            [ngClass]="{
+                              'bg-yellow-100 text-yellow-800': policy.status === 'Pending' || policy.status === 'pending',
+                              'bg-green-100 text-green-800': policy.status === 'Approved' || policy.status === 'approved' || policy.status === 'Active',
+                              'bg-red-100 text-red-800': policy.status === 'Inactive' || policy.status === 'Cancelled'
+                            }">
+                        {{policy.status | uppercase}}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span *ngIf="policy.assignedAgentName" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <i class="fas fa-user mr-1"></i>
+                        {{policy.assignedAgentName}}
+                      </span>
+                      <span *ngIf="!policy.assignedAgentName" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <i class="fas fa-user-times mr-1"></i>
+                        Not Assigned
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button (click)="viewPolicy(policy)" class="text-blue-600 hover:text-blue-900">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button (click)="editPolicy(policy)" class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button (click)="deletePolicy(policy)" class="text-red-600 hover:text-red-900">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                      <button (click)="openAssignAgent(policy._id || policy.id || '')" class="text-indigo-600 hover:text-indigo-900" title="Assign Agent">
+                        <i class="fas fa-user-plus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <!-- Empty state -->
+              <div *ngIf="filteredPolicies.length === 0" class="text-center py-8">
+                <div class="text-gray-500">
+                  <i class="fas fa-folder-open text-4xl mb-2"></i>
+                  <p class="text-lg">No policies found</p>
+                  <p class="text-sm">{{policies.length === 0 ? 'Add your first policy to get started' : 'Try adjusting your search criteria'}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Policy Modal -->
+        <div *ngIf="showEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Edit Policy</h3>
+            </div>
+            <form (ngSubmit)="updatePolicy()" #editPolicyForm="ngForm" class="p-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Policy Code <span class="text-red-500">*</span>
+                  </label>
+                  <input type="text" [(ngModel)]="editingPolicy.code" name="editCode" required 
+                         placeholder="Enter policy code"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         [class.border-red-500]="!editingPolicy.code">
+                  <div *ngIf="!editingPolicy.code" class="text-red-500 text-xs mt-1">Policy code is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Policy Title <span class="text-red-500">*</span>
+                  </label>
+                  <input type="text" [(ngModel)]="editingPolicy.title" name="editTitle" required 
+                         placeholder="Enter policy title"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         [class.border-red-500]="!editingPolicy.title">
+                  <div *ngIf="!editingPolicy.title" class="text-red-500 text-xs mt-1">Policy title is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Policy Type <span class="text-red-500">*</span>
+                  </label>
+                  <select [(ngModel)]="editingPolicy.type" name="editType" required 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          [class.border-red-500]="!editingPolicy.type">
+                    <option value="">Select policy type</option>
+                    <option value="Life Insurance">Life Insurance</option>
+                    <option value="Health Insurance">Health Insurance</option>
+                    <option value="Auto Insurance">Auto Insurance</option>
+                    <option value="Home Insurance">Home Insurance</option>
+                    <option value="Travel Insurance">Travel Insurance</option>
+                  </select>
+                  <div *ngIf="!editingPolicy.type" class="text-red-500 text-xs mt-1">Policy type is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Min Sum Insured ($) <span class="text-red-500">*</span>
+                  </label>
+                  <input type="number" [(ngModel)]="editingPolicy.minSumInsured" name="editMinSumInsured" required 
+                         min="0" step="0.01" placeholder="0.00"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         [class.border-red-500]="!editingPolicy.minSumInsured || editingPolicy.minSumInsured <= 0">
+                  <div *ngIf="!editingPolicy.minSumInsured || editingPolicy.minSumInsured <= 0" class="text-red-500 text-xs mt-1">Valid minimum sum insured is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Term Months <span class="text-red-500">*</span>
+                  </label>
+                  <input type="number" [(ngModel)]="editingPolicy.termMonths" name="editTermMonths" required 
+                         min="1" step="1" placeholder="12"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         [class.border-red-500]="!editingPolicy.termMonths || editingPolicy.termMonths <= 0">
+                  <div *ngIf="!editingPolicy.termMonths || editingPolicy.termMonths <= 0" class="text-red-500 text-xs mt-1">Valid term months is required</div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tenure Months <span class="text-red-500">*</span>
+                  </label>
+                  <input type="number" [(ngModel)]="editingPolicy.tenureMonths" name="editTenureMonths" required 
+                         min="1" step="1" placeholder="120"
+                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         [class.border-red-500]="!editingPolicy.tenureMonths || editingPolicy.tenureMonths <= 0">
+                  <div *ngIf="!editingPolicy.tenureMonths || editingPolicy.tenureMonths <= 0" class="text-red-500 text-xs mt-1">Valid tenure months is required</div>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select [(ngModel)]="editingPolicy.status" name="editStatus" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea [(ngModel)]="editingPolicy.description" name="editDescription" rows="3" 
+                            placeholder="Enter policy description"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+              </div>
+              <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" (click)="cancelEdit()" 
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition duration-200">
+                  Cancel
+                </button>
+                <button type="submit" [disabled]="!editPolicyForm.form.valid" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition duration-200">
+                  Update Policy
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- View Policy Modal -->
+        <div *ngIf="showViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4">
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Policy Details</h3>
+            </div>
+            <div class="p-4">
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Policy ID:</span>
+                  <span class="text-gray-900">{{viewingPolicy.id}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Code:</span>
+                  <span class="text-gray-900">{{viewingPolicy.code}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Title:</span>
+                  <span class="text-gray-900">{{viewingPolicy.title}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Type:</span>
+                  <span class="text-gray-900">{{viewingPolicy.type}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Min Sum Insured:</span>
+                  <span class="text-gray-900">${{viewingPolicy.minSumInsured | number}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Term Months:</span>
+                  <span class="text-gray-900">{{viewingPolicy.termMonths}} months</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Tenure Months:</span>
+                  <span class="text-gray-900">{{viewingPolicy.tenureMonths}} months</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Status:</span>
+                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" 
+                        [class]="viewingPolicy.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                    {{viewingPolicy.status}}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-gray-700">Created:</span>
+                  <span class="text-gray-900">{{viewingPolicy.createdAt | date}}</span>
+                </div>
+                <div *ngIf="viewingPolicy.description">
+                  <span class="font-medium text-gray-700">Description:</span>
+                  <p class="text-gray-900 mt-1">{{viewingPolicy.description}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 flex justify-end">
+              <button (click)="closeViewModal()" 
+                      class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm font-medium transition duration-200">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow-xs">
+          <div class="p-4 border-b border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-800">Recent Activities</h4>
+          </div>
+          <div class="p-4">
+            <div class="space-y-4">
+              <div *ngFor="let activity of recentActivities" class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900">{{activity.type}}</p>
+                  <p class="text-sm text-gray-500">{{activity.user}} • {{activity.timestamp}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assign Agent Modal -->
+        <div *ngIf="assignAgentPolicyId" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900">Assign Claim to Agent</h3>
+            </div>
+            <form (ngSubmit)="assignAgentToPolicy()" class="p-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Agent</label>
+              <select [(ngModel)]="selectedAgentId" name="assignAgentSelect" required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-4">
+                <option value="" disabled>Select an agent</option>
+                <option *ngFor="let agent of agents" [value]="agent._id">{{agent.name}} ({{agent.email}})</option>
+              </select>
+              <div class="flex justify-end space-x-2">
+                <button type="button" (click)="assignAgentPolicyId = null; selectedAgentId = null;" class="px-4 py-2 rounded bg-gray-200 text-gray-700">Cancel</button>
+                <button type="submit" [disabled]="!selectedAgentId" class="px-4 py-2 rounded bg-blue-600 text-white font-semibold">Assign</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Agents Section -->
+        <div class="bg-white rounded-lg shadow-xs" *ngIf="showAgentsSection">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h4 class="text-lg font-semibold text-gray-800">Agents</h4>
+          </div>
+          <div class="p-4">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent Name</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let agent of agents">
+                  <td class="px-6 py-4 whitespace-nowrap">{{agent.name}}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{agent.email}}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{agent.phone}}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div *ngIf="agents.length === 0" class="text-center py-8">
+              <div class="text-gray-500">
+                <i class="fas fa-user-friends text-4xl mb-2"></i>
+                <p class="text-lg">No agents found</p>
+                <p class="text-sm">Agents will appear here once added to the system.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Policies Section -->
+        <section *ngIf="currentSection === 'pendingPolicies'" class="p-6 bg-white shadow-md rounded-md mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Pending Policies</h2>
+          </div>
+          <div *ngIf="pendingPolicies.length > 0; else noPendingPolicies">
+            <table class="table-auto w-full border-collapse border border-gray-300">
+              <thead>
+                <tr>
+                  <th class="border border-gray-300 px-4 py-2">Policy Code</th>
+                  <th class="border border-gray-300 px-4 py-2">Title</th>
+                  <th class="border border-gray-300 px-4 py-2">Customer</th>
+                  <th class="border border-gray-300 px-4 py-2">Status</th>
+                  <th class="border border-gray-300 px-4 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let policy of pendingPolicies">
+                  <td class="border border-gray-300 px-4 py-2">{{policy.policyCode || policy.code}}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{policy.policyTitle || policy.title}}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{policy.customerName}}</td>
+                  <td class="border border-gray-300 px-4 py-2">
+                    <span class="px-2 py-1 rounded text-sm" 
+                          [ngClass]="{'bg-yellow-200 text-yellow-800': policy.status === 'Pending' || policy.status === 'pending', 'bg-green-200 text-green-800': policy.status === 'Approved' || policy.status === 'approved'}">
+                      {{policy.status | uppercase}}
+                    </span>
+                  </td>
+                  <td class="border border-gray-300 px-4 py-2">
+                    <button (click)="approvePolicy(policy.userPolicyId ?? policy._id ?? '')" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+                            [disabled]="policy.status === 'Approved' || policy.status === 'approved'">
+                      {{(policy.status === 'Approved' || policy.status === 'approved') ? 'Approved' : 'Approve'}}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noPendingPolicies>
+            <p class="text-gray-600">No pending policies available.</p>
+          </ng-template>
+        </section>
+
+        <section *ngIf="currentSection === 'approvedPolicies'" class="p-6 bg-white shadow-md rounded-md mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Approved Policies</h2>
+          </div>
+          <div *ngIf="approvedPolicies.length > 0; else noApprovedPolicies">
+            <table class="table-auto w-full border-collapse border border-gray-300">
+              <thead>
+                <tr>
+                  <th class="border border-gray-300 px-4 py-2">Policy Code</th>
+                  <th class="border border-gray-300 px-4 py-2">Title</th>
+                  <th class="border border-gray-300 px-4 py-2">Customer</th>
+                  <th class="border border-gray-300 px-4 py-2">Status</th>
+                  <th class="border border-gray-300 px-4 py-2">Purchase Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let policy of approvedPolicies">
+                  <td class="border border-gray-300 px-4 py-2">{{policy.policyCode || policy.code}}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{policy.policyTitle || policy.title}}</td>
+                  <td class="border border-gray-300 px-4 py-2">{{policy.customerName}}</td>
+                  <td class="border border-gray-300 px-4 py-2">
+                    <span class="px-2 py-1 rounded text-sm bg-green-200 text-green-800">
+                      {{policy.status | uppercase}}
+                    </span>
+                  </td>
+                  <td class="border border-gray-300 px-4 py-2">{{policy.purchaseDate | date:'short'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noApprovedPolicies>
+            <p class="text-gray-600">No approved policies available.</p>
+          </ng-template>
+        </section>
+
+        <!-- Claims Management Section -->
+        <section *ngIf="currentSection === 'claims'" class="p-6 bg-white shadow-md rounded-md mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Claims Management</h2>
+            <div class="flex items-center space-x-4">
+              <!-- Claims Status Filter -->
+              <select [(ngModel)]="claimStatusFilter" (change)="filterClaims()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Claims</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button (click)="loadAllClaims()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                <i class="fas fa-sync mr-1"></i> Refresh
+              </button>
+            </div>
+          </div>
+          
+          <!-- Claims Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-yellow-600">Pending Claims</p>
+                  <p class="text-2xl font-bold text-yellow-800">{{claimStats.pending}}</p>
+                </div>
+                <i class="fas fa-clock text-yellow-500 text-xl"></i>
+              </div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-green-600">Approved Claims</p>
+                  <p class="text-2xl font-bold text-green-800">{{claimStats.approved}}</p>
+                </div>
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+              </div>
+            </div>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-red-600">Rejected Claims</p>
+                  <p class="text-2xl font-bold text-red-800">{{claimStats.rejected}}</p>
+                </div>
+                <i class="fas fa-times-circle text-red-500 text-xl"></i>
+              </div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-blue-600">Total Claims</p>
+                  <p class="text-2xl font-bold text-blue-800">{{claimStats.total}}</p>
+                </div>
+                <i class="fas fa-file-invoice-dollar text-blue-500 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Claims Table -->
+          <div *ngIf="filteredClaims.length > 0; else noClaims" class="overflow-x-auto">
+            <table class="table-auto w-full border-collapse border border-gray-300">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim ID</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incident Type</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filed Date</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let claim of filteredClaims; trackBy: trackByClaim" class="hover:bg-gray-50">
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                    {{claim._id.substring(claim._id.length - 8)}}
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div>
+                      <div class="font-medium">{{claim.userId?.name || 'Unknown'}}</div>
+                      <div class="text-gray-500">{{claim.userId?.email}}</div>
+                    </div>
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div>
+                      <div class="font-medium">{{claim.userPolicyId?.policyProductId?.title || 'Policy'}}</div>
+                      <div class="text-gray-500">{{claim.userPolicyId?.policyProductId?.code}}</div>
+                    </div>
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{claim.incidentType || 'Not specified'}}
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    ${{claim.amountClaimed | number:'1.2-2'}}
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [class.bg-yellow-100]="claim.status === 'Pending'"
+                          [class.text-yellow-800]="claim.status === 'Pending'"
+                          [class.bg-green-100]="claim.status === 'Approved'"
+                          [class.text-green-800]="claim.status === 'Approved'"
+                          [class.bg-red-100]="claim.status === 'Rejected'"
+                          [class.text-red-800]="claim.status === 'Rejected'">
+                      {{claim.status}}
+                    </span>
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{claim.createdAt | date:'medium'}}
+                  </td>
+                  <td class="border border-gray-300 px-4 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button (click)="viewClaimDetails(claim)" 
+                              class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded text-xs border border-blue-200 hover:bg-blue-50">
+                        <i class="fas fa-eye mr-1"></i> View
+                      </button>
+                      <button *ngIf="claim.status === 'Pending'" 
+                              (click)="approveClaimModal(claim)" 
+                              class="text-green-600 hover:text-green-900 px-2 py-1 rounded text-xs border border-green-200 hover:bg-green-50">
+                        <i class="fas fa-check mr-1"></i> Approve
+                      </button>
+                      <button *ngIf="claim.status === 'Pending'" 
+                              (click)="rejectClaimModal(claim)" 
+                              class="text-red-600 hover:text-red-900 px-2 py-1 rounded text-xs border border-red-200 hover:bg-red-50">
+                        <i class="fas fa-times mr-1"></i> Reject
+                      </button>
+                      <button (click)="openAssignAgent(claim._id || claim.id || '')" class="text-indigo-600 hover:text-indigo-900" title="Assign Agent">
+                        <i class="fas fa-user-plus"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noClaims>
+            <div class="text-center py-8">
+              <i class="fas fa-file-invoice-dollar text-gray-400 text-4xl mb-4"></i>
+              <p class="text-gray-500 text-lg">No claims found</p>
+              <p class="text-gray-400 text-sm">Claims will appear here once customers file them</p>
+            </div>
+          </ng-template>
+        </section>
+
+        <!-- Payments Section -->
+        <section *ngIf="currentSection === 'payments'" class="p-6 bg-white shadow-md rounded-md mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">All Customer Payments</h2>
+            <div class="flex items-center space-x-4">
+              <!-- Payment Status Filter -->
+              <select [(ngModel)]="paymentStatusFilter" (change)="filterPayments()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Payments</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+              <!-- Refresh Button -->
+              <button (click)="loadPayments()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+              </button>
+            </div>
+          </div>
+          
+          <!-- Loading State -->
+          <div *ngIf="loadingPayments" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Loading payments...</p>
+          </div>
+
+          <!-- Payments Table -->
+          <div *ngIf="!loadingPayments && filteredPayments.length > 0; else noPayments">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-dollar-sign text-green-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">Total Payments</p>
+                    <p class="text-2xl font-bold text-green-900">${{paymentStats.totalAmount | number:'1.2-2'}}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-blue-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-blue-800">Completed</p>
+                    <p class="text-2xl font-bold text-blue-900">{{paymentStats.completedCount}}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-yellow-800">Pending</p>
+                    <p class="text-2xl font-bold text-yellow-900">{{paymentStats.pendingCount}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payments Table -->
+            <div class="overflow-x-auto">
+              <table class="table-auto w-full border-collapse border border-gray-300">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Payment ID</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Customer</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Policy</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Amount</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Method</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Reference</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Status</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Date</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let payment of filteredPayments" class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 font-mono text-sm">{{payment._id | slice:0:8}}...</td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
+                          <i class="fas fa-user text-gray-600 text-sm"></i>
+                        </div>
+                        <div class="ml-3">
+                          <p class="text-sm font-medium text-gray-900">{{payment.userId?.name || 'Unknown'}}</p>
+                          <p class="text-sm text-gray-500">{{payment.userId?.email || 'No email'}}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900">{{payment.userPolicyId?.policyProductId?.title || 'Unknown Policy'}}</p>
+                        <p class="text-sm text-gray-500">{{payment.userPolicyId?.policyProductId?.code || 'No code'}}</p>
+                      </div>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <span class="text-lg font-bold text-green-600">${{payment.amount | number:'1.2-2'}}</span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <span class="px-2 py-1 rounded text-xs font-medium"
+                            [ngClass]="{
+                              'bg-blue-100 text-blue-800': payment.method === 'Card',
+                              'bg-purple-100 text-purple-800': payment.method === 'Netbanking',
+                              'bg-gray-100 text-gray-800': payment.method === 'Offline',
+                              'bg-yellow-100 text-yellow-800': payment.method === 'Simulated'
+                            }">
+                        <i class="fas" [ngClass]="{
+                              'fa-credit-card': payment.method === 'Card',
+                              'fa-university': payment.method === 'Netbanking',
+                              'fa-store': payment.method === 'Offline',
+                              'fa-cog': payment.method === 'Simulated'
+                            }"></i>
+                        {{payment.method}}
+                      </span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <span class="font-mono text-sm">{{payment.reference || 'N/A'}}</span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle mr-1"></i>COMPLETED
+                      </span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <div>
+                        <p class="text-sm text-gray-900">{{payment.createdAt | date:'short'}}</p>
+                        <p class="text-xs text-gray-500">{{payment.createdAt | date:'MMMM d, y'}}</p>
+                      </div>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">
+                      <div class="flex space-x-2">
+                        <button (click)="viewPaymentDetails(payment)" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                          <i class="fas fa-eye mr-1"></i>View
+                        </button>
+                        <button (click)="downloadPaymentReceipt(payment)" 
+                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                          <i class="fas fa-download mr-1"></i>Receipt
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-6">
+              <div class="flex items-center text-sm text-gray-500">
+                Showing {{((currentPage - 1) * pageSize) + 1}} to {{Math.min(currentPage * pageSize, filteredPayments.length)}} of {{filteredPayments.length}} payments
+              </div>
+              <div class="flex items-center space-x-2">
+                <button (click)="previousPage()" 
+                        [disabled]="currentPage === 1"
+                        class="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                  <i class="fas fa-chevron-left mr-1"></i>Previous
+                </button>
+                <span class="px-3 py-2 text-sm">Page {{currentPage}} of {{totalPages}}</span>
+                <button (click)="nextPage()" 
+                        [disabled]="currentPage === totalPages"
+                        class="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                  Next<i class="fas fa-chevron-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Payments Template -->
+          <ng-template #noPayments>
+            <div class="text-center py-12">
+              <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+                <i class="fas fa-credit-card text-2xl text-gray-400"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
+              <p class="text-gray-500 mb-4">{{paymentStatusFilter ? 'No ' + paymentStatusFilter + ' payments available.' : 'No customer payments have been made yet.'}}</p>
+              <button (click)="loadPayments()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh Payments
+              </button>
+            </div>
+          </ng-template>
+        </section>
+
+        <!-- Customer Details Section -->
+        <section *ngIf="currentSection === 'customerDetails'" class="p-6 bg-white shadow-md rounded-md mt-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Customer Details - Policy Holders</h2>
+            <div class="flex items-center space-x-4">
+              <!-- Search Filter -->
+              <div class="relative">
+                <input [(ngModel)]="customerSearchTerm" (input)="filterCustomers()" 
+                       placeholder="Search customers..." 
+                       class="border border-gray-300 rounded-md px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
+              </div>
+              <!-- Status Filter -->
+              <select [(ngModel)]="customerStatusFilter" (change)="filterCustomers()" 
+                      class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Customers</option>
+                <option value="active">Active Policies</option>
+                <option value="approved">Approved Only</option>
+                <option value="pending">Pending Only</option>
+              </select>
+              <!-- Refresh Button -->
+              <button (click)="loadCustomerDetails()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+              </button>
+            </div>
+          </div>
+          
+          <!-- Loading State -->
+          <div *ngIf="loadingCustomers" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Loading customer details...</p>
+          </div>
+
+          <!-- Customer Summary Cards -->
+          <div *ngIf="!loadingCustomers && customerDetails.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-users text-blue-600 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-blue-800">Total Customers</p>
+                  <p class="text-2xl font-bold text-blue-900">{{customerStats.totalCustomers}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-green-50 border-l-4 border-green-500 p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-green-800">Active Policies</p>
+                  <p class="text-2xl font-bold text-green-900">{{customerStats.activePolicies}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-yellow-800">Pending Policies</p>
+                  <p class="text-2xl font-bold text-yellow-900">{{customerStats.pendingPolicies}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-purple-50 border-l-4 border-purple-500 p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-dollar-sign text-purple-600 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-purple-800">Total Premium</p>
+                  <p class="text-2xl font-bold text-purple-900">${{customerStats.totalPremium | number:'1.2-2'}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customers Table -->
+          <div *ngIf="!loadingCustomers && filteredCustomerDetails.length > 0; else noCustomers" class="overflow-x-auto">
+            <table class="table-auto w-full border-collapse border border-gray-300">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Customer Info</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Contact Details</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Policies</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Total Premium</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Payments Made</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Join Date</th>
+                  <th class="border border-gray-300 px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let customer of paginatedCustomers" class="hover:bg-gray-50">
+                  <!-- Customer Info -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">{{(customer.customer.name || 'U').charAt(0).toUpperCase()}}</span>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">{{customer.customer.name || 'Unknown'}}</div>
+                        <div class="text-sm text-gray-500">ID: {{customer.customer._id | slice:0:8}}...</div>
+                        <div class="text-xs text-gray-400">{{customer.customer.role || 'Customer'}}</div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Contact Details -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="text-sm text-gray-900">
+                      <div class="flex items-center mb-1">
+                        <i class="fas fa-envelope text-gray-400 mr-2"></i>
+                        <span>{{customer.customer.email || 'No email'}}</span>
+                      </div>
+                      <div class="flex items-center">
+                        <i class="fas fa-phone text-gray-400 mr-2"></i>
+                        <span>{{customer.customer.phone || 'No phone'}}</span>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Policies -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="space-y-1">
+                      <div class="text-sm font-medium text-gray-900">
+                        {{customer.policies.length}} Policies
+                      </div>
+                      <div *ngFor="let policy of customer.policies.slice(0, 2)" class="text-xs">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium mr-1"
+                              [ngClass]="{
+                                'bg-green-100 text-green-800': policy.status === 'Approved',
+                                'bg-yellow-100 text-yellow-800': policy.status === 'Pending',
+                                'bg-red-100 text-red-800': policy.status === 'Cancelled',
+                                'bg-blue-100 text-blue-800': policy.status === 'Active'
+                              }">
+                          {{policy.policyProductId?.title || 'Unknown Policy'}} - {{policy.status}}
+                        </span>
+                      </div>
+                      <div *ngIf="customer.policies.length > 2" class="text-xs text-gray-500">
+                        +{{customer.policies.length - 2}} more
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Total Premium -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="text-sm">
+                      <div class="text-lg font-bold text-green-600">
+                        ${{customer.totalPremium | number:'1.2-2'}}
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        Paid: ${{customer.totalPaid | number:'1.2-2'}}
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Payments Made -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="text-sm">
+                      <div class="font-medium text-gray-900">
+                        {{customer.payments.length}} Payments
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        Last: {{customer.payments.length > 0 ? (customer.payments[0].createdAt | date:'short') : 'Never'}}
+                      </div>
+                      <div class="text-xs text-green-600">
+                        ${{customer.payments.reduce(sumPayments, 0) | number:'1.2-2'}} total
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Join Date -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="text-sm text-gray-900">
+                      {{customer.customer.createdAt | date:'short'}}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{customer.customer.createdAt | date:'MMMM d, y'}}
+                    </div>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="border border-gray-300 px-4 py-4">
+                    <div class="flex space-x-2">
+                      <button (click)="viewCustomerDetails(customer)" 
+                              class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                        <i class="fas fa-eye mr-1"></i>View
+                      </button>
+                      <button (click)="viewCustomerPolicies(customer)" 
+                              class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                        <i class="fas fa-shield-alt mr-1"></i>Policies
+                      </button>
+                      <button (click)="viewCustomerPayments(customer)" 
+                              class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-xs">
+                        <i class="fas fa-credit-card mr-1"></i>Payments
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Pagination for Customers -->
+            <div class="flex items-center justify-between mt-6">
+              <div class="flex items-center text-sm text-gray-500">
+                Showing {{((customerCurrentPage - 1) * customerPageSize) + 1}} to {{Math.min(customerCurrentPage * customerPageSize, filteredCustomerDetails.length)}} of {{filteredCustomerDetails.length}} customers
+              </div>
+              <div class="flex items-center space-x-2">
+                <button (click)="previousCustomerPage()" 
+                        [disabled]="customerCurrentPage === 1"
+                        class="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                  <i class="fas fa-chevron-left mr-1"></i>Previous
+                </button>
+                <span class="px-3 py-2 text-sm">Page {{customerCurrentPage}} of {{customerTotalPages}}</span>
+                <button (click)="nextCustomerPage()" 
+                        [disabled]="customerCurrentPage === customerTotalPages"
+                        class="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                  Next<i class="fas fa-chevron-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Customers Template -->
+          <ng-template #noCustomers>
+            <div class="text-center py-12">
+              <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+                <i class="fas fa-user-friends text-2xl text-gray-400"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No customers with policies found</h3>
+              <p class="text-gray-500 mb-4">No customers have purchased policies yet.</p>
+              <button (click)="loadCustomerDetails()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh Customer Data
+              </button>
+            </div>
+          </ng-template>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Claim Approval Modal -->
+  <div *ngIf="showClaimApprovalModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Approve Claim</h3>
+      </div>
+      <div class="px-6 py-4">
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-2">Are you sure you want to approve this claim?</p>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p><strong>Claim ID:</strong> {{selectedClaim?._id?.substring(selectedClaim._id.length - 8)}}</p>
+            <p><strong>Customer:</strong> {{selectedClaim?.userId?.name}}</p>
+            <p><strong>Amount:</strong> ${{selectedClaim?.amountClaimed | number:'1.2-2'}}</p>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Decision Notes</label>
+          <textarea [(ngModel)]="claimDecisionNotes" rows="3" 
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Optional notes about the approval decision"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <button (click)="closeClaimModal()" 
+                class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition duration-200">
+          Cancel
+        </button>
+        <button (click)="processClaimDecision('Approved')" 
+                class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition duration-200">
+          <i class="fas fa-check mr-2"></i>Approve Claim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Rejection Modal -->
+  <div *ngIf="showClaimRejectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Reject Claim</h3>
+      </div>
+      <div class="px-6 py-4">
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-2">Are you sure you want to reject this claim?</p>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p><strong>Claim ID:</strong> {{selectedClaim?._id?.substring(selectedClaim._id.length - 8)}}</p>
+            <p><strong>Customer:</strong> {{selectedClaim?.userId?.name}}</p>
+            <p><strong>Amount:</strong> ${{selectedClaim?.amountClaimed | number:'1.2-2'}}</p>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Rejection <span class="text-red-500">*</span></label>
+          <textarea [(ngModel)]="claimDecisionNotes" rows="3" required
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Please provide a reason for rejecting this claim"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <button (click)="closeClaimModal()" 
+                class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition duration-200">
+          Cancel
+        </button>
+        <button (click)="processClaimDecision('Rejected')" 
+                class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-200">
+          <i class="fas fa-times mr-2"></i>Reject Claim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Details Modal -->
+  <div *ngIf="showClaimDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Claim Details</h3>
+      </div>
+      <div class="px-6 py-4 max-h-96 overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">Claim Information</h4>
+            <div class="space-y-2 text-sm">
+              <p><strong>Claim ID:</strong> {{selectedClaim?._id}}</p>
+              <p><strong>Status:</strong> 
+                <span class="px-2 py-1 rounded text-xs"
+                      [class.bg-yellow-100]="selectedClaim?.status === 'Pending'"
+                      [class.text-yellow-800]="selectedClaim?.status === 'Pending'"
+                      [class.bg-green-100]="selectedClaim?.status === 'Approved'"
+                      [class.text-green-800]="selectedClaim?.status === 'Approved'"
+                      [class.bg-red-100]="selectedClaim?.status === 'Rejected'"
+                      [class.text-red-800]="selectedClaim?.status === 'Rejected'">
+                  {{selectedClaim?.status}}
+                </span>
+              </p>
+              <p><strong>Amount Claimed:</strong> ${{selectedClaim?.amountClaimed | number:'1.2-2'}}</p>
+              <p><strong>Incident Date:</strong> {{selectedClaim?.incidentDate | date:'mediumDate'}}</p>
+              <p><strong>Filed Date:</strong> {{selectedClaim?.createdAt | date:'medium'}}</p>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">Customer Information</h4>
+            <div class="space-y-2 text-sm">
+              <p><strong>Name:</strong> {{selectedClaim?.userId?.name}}</p>
+              <p><strong>Email:</strong> {{selectedClaim?.userId?.email}}</p>
+              <p><strong>Phone:</strong> {{selectedClaim?.userId?.phone}}</p>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">Policy Information</h4>
+            <div class="space-y-2 text-sm">
+              <p><strong>Policy:</strong> {{selectedClaim?.userPolicyId?.policyProductId?.title}}</p>
+              <p><strong>Code:</strong> {{selectedClaim?.userPolicyId?.policyProductId?.code}}</p>
+              <p><strong>Coverage:</strong> ${{selectedClaim?.userPolicyId?.policyProductId?.minSumInsured | number}}</p>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">Incident Details</h4>
+            <div class="space-y-2 text-sm">
+              <p><strong>Type:</strong> {{selectedClaim?.incidentType}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <h4 class="font-medium text-gray-900 mb-2">Description</h4>
+          <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{selectedClaim?.description}}</p>
+        </div>
+        <div *ngIf="selectedClaim?.decisionNotes" class="mt-4">
+          <h4 class="font-medium text-gray-900 mb-2">Decision Notes</h4>
+          <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{selectedClaim?.decisionNotes}}</p>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+        <button (click)="closeClaimDetailsModal()" 
+                class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition duration-200">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

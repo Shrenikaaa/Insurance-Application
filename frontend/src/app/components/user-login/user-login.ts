@@ -87,7 +87,7 @@ export class UserLogin {
     console.log('Login attempt with data:', { ...loginData, password: '[hidden]' });
 
     // Call backend API
-    this.http.post('http://localhost:8000/api/v1/users/login', loginData)
+    this.http.post('http://localhost:3000/api/v1/users/login', loginData)
       .subscribe({
         next: (response: any) => {
           this.isLoading = false;
@@ -96,9 +96,10 @@ export class UserLogin {
           if (response.token) {
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
+            localStorage.setItem('userRole', response.user?.role || 'Customer');
           }
           
-          // Show success message for testing (instead of navigation)
+          // Show success message briefly
           this.successMessage = `Welcome back! Successfully logged in as ${response.user?.role || 'User'}.`;
           this.showLoginSuccess = true;
           console.log('Login successful:', response);
@@ -106,14 +107,16 @@ export class UserLogin {
           // Reset form
           this.resetLoginForm();
           
-          // TODO: Later change this to navigation
-          // if (response.user?.role === 'Admin') {
-          //   this.router.navigate(['/admin-dashboard']);
-          // } else if (response.user?.role === 'Agent') {
-          //   this.router.navigate(['/agent-dashboard']);
-          // } else {
-          //   this.router.navigate(['/customer-dashboard']);
-          // }
+          // Navigate to appropriate dashboard based on user role
+          setTimeout(() => {
+            if (response.user?.role === 'Admin') {
+              this.router.navigate(['/admin-dashboard']);
+            } else if (response.user?.role === 'Agent') {
+              this.router.navigate(['/agent-dashboard']);
+            } else {
+              this.router.navigate(['/customer-dashboard']);
+            }
+          }, 1000); // Brief delay to show success message
         },
         error: (error) => {
           this.isLoading = false;

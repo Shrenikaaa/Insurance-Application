@@ -14,7 +14,7 @@ const UserPolicySchema = new mongoose.Schema({
   userId: 
   { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+    ref: 'Customer', 
     required: true 
 },
   policyProductId: 
@@ -43,6 +43,10 @@ const UserPolicySchema = new mongoose.Schema({
     type: String, 
     enum: ['Pending','Approved','Cancelled','Expired','Claimed'], 
     default: 'Pending' 
+  },
+  approved: {
+    type: Boolean,
+    default: false
   },
   assignedAgentId: 
   { 

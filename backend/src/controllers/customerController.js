@@ -21,6 +21,15 @@ const paymentSchema = Joi.object({
   reference: Joi.string().optional()
 });
 
+const claimSchema = Joi.object({
+  userPolicyId: Joi.string().required(),
+  incidentDate: Joi.date().required(),
+  description: Joi.string().min(10).max(1000).required(),
+  amountClaimed: Joi.number().positive().required(),
+  incidentType: Joi.string().min(3).max(50).optional(),
+  attachments: Joi.array().items(Joi.string()).optional()
+});
+
 const customerController = {
   // Get details for a specific claim by claimId (customer)
   async getClaimById(req, res) {
@@ -41,65 +50,200 @@ const customerController = {
   },
   // Raise a claim for a policy
   async raiseClaim(req, res) {
-    const { userPolicyId, incidentDate, description, amountClaimed } = req.body;
-    const userPolicy = await UserPolicy.findById(userPolicyId);
-    if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
-    const Claim = (await import('../models/claim.js')).default;
-    const claim = await Claim.create({
-      userId: req.user.userId,
-      userPolicyId,
-      incidentDate,
-      description,
-      amountClaimed,
-      status: 'Pending'
-    });
-    res.json({ success: true, claim });
+    try {
+      console.log('=== RAISE CLAIM REQUEST ===');
+      console.log('Request body:', req.body);
+      console.log('User:', req.user);
+
+      // Validate request data
+      const { error, value } = claimSchema.validate(req.body);
+      if (error) {
+        console.log('Validation error:', error.details);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Validation error',
+          errors: error.details.map(detail => detail.message)
+        });
+      }
+
+      const { userPolicyId, incidentDate, description, amountClaimed, incidentType } = value;
+
+      // Check if user policy exists and belongs to the user
+      const userPolicy = await UserPolicy.findById(userPolicyId)
+        .populate('policyProductId', 'title code premium minSumInsured');
+
+      if (!userPolicy) {
+        console.log('User policy not found:', userPolicyId);
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Policy not found' 
+        });
+      }
+
+      // Verify the policy belongs to the requesting user
+      if (userPolicy.userId.toString() !== req.user.userId) {
+        console.log('Policy ownership mismatch:', {
+          policyUserId: userPolicy.userId.toString(),
+          requestUserId: req.user.userId
+        });
+        return res.status(403).json({ 
+          success: false, 
+          message: 'You can only raise claims for your own policies' 
+        });
+      }
+
+      // Check if policy is approved (only approved policies can have claims)
+      if (userPolicy.status !== 'Approved') {
+        console.log('Policy not approved:', userPolicy.status);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Claims can only be raised for approved policies' 
+        });
+      }
+
+      // Validate claim amount doesn't exceed policy coverage
+      const maxClaimAmount = userPolicy.policyProductId?.minSumInsured || 0;
+      if (amountClaimed > maxClaimAmount) {
+        console.log('Claim amount exceeds coverage:', {
+          amountClaimed,
+          maxCoverage: maxClaimAmount
+        });
+        return res.status(400).json({ 
+          success: false, 
+          message: `Claim amount ($${amountClaimed}) exceeds policy coverage ($${maxClaimAmount})` 
+        });
+      }
+
+      // Check if incident date is valid (not in future, not before policy start)
+      const currentDate = new Date();
+      const policyStartDate = new Date(userPolicy.startDate);
+      const incidentDateObj = new Date(incidentDate);
+
+      if (incidentDateObj > currentDate) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Incident date cannot be in the future' 
+        });
+      }
+
+      if (incidentDateObj < policyStartDate) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Incident date cannot be before policy start date' 
+        });
+      }
+
+      // Create the claim
+      const Claim = (await import('../models/claim.js')).default;
+      const claim = await Claim.create({
+        userId: req.user.userId,
+        userPolicyId,
+        incidentDate: incidentDateObj,
+        description,
+        amountClaimed,
+        incidentType: incidentType || 'General Claim',
+        status: 'Pending'
+      });
+
+      console.log('Claim created successfully:', claim._id);
+
+      // Populate the created claim for response
+      const populatedClaim = await Claim.findById(claim._id)
+        .populate('userId', 'name email')
+        .populate({
+          path: 'userPolicyId',
+          populate: {
+            path: 'policyProductId',
+            select: 'title code premium'
+          }
+        });
+
+      res.status(201).json({ 
+        success: true, 
+        claim: populatedClaim,
+        message: 'Claim submitted successfully. You will be notified of the status updates.'
+      });
+
+    } catch (err) {
+      console.error('Error in raiseClaim:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error raising claim',
+        error: err.message 
+      });
+    }
   },
-  // View all policies
+    // View all policies
   async viewPolicies(req, res) {
-    const policies = await PolicyProduct.find();
-    res.json({ success: true, policies });
+    try {
+      console.log('=== CUSTOMER VIEW POLICIES REQUEST ===');
+      console.log('User info:', req.user);
+      
+      const policies = await PolicyProduct.find();
+      console.log('Found policies:', policies.length);
+      
+      res.json({ success: true, policies });
+    } catch (err) {
+      console.error('Error in viewPolicies:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // Purchase a policy
   async purchasePolicy(req, res) {
-    const { error, value } = purchaseSchema.validate(req.body);
-    if (error) return res.status(400).json({ success: false, error: error.details });
-    const { policyProductId, startDate, nominee } = value;
-    const userId = req.user.userId;
-    const policyProduct = await PolicyProduct.findById(policyProductId);
-    if (!policyProduct) return res.status(404).json({ success: false, message: 'Policy not found' });
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + policyProduct.termMonths);
-    const userPolicy = await UserPolicy.create({
-      userId,
-      policyProductId,
-      startDate,
-      endDate,
-      status: 'Pending',
-      nominee,
-      assignedAgentId: policyProduct.assignedAgentId || null
-    });
-    res.json({ success: true, userPolicy });
+    try {
+      console.log('Purchase policy request received:', req.body);
+      const { error } = purchaseSchema.validate(req.body);
+      if (error) {
+        console.error('Validation error:', error.details[0].message);
+        return res.status(400).json({ success: false, message: error.details[0].message });
+      }
+      const policy = await PolicyProduct.findById(req.body.policyProductId);
+      if (!policy) {
+        console.error('Policy not found for ID:', req.body.policyProductId);
+        return res.status(404).json({ success: false, message: 'Policy not found' });
+      }
+      console.log('Policy found:', policy);
+      const userPolicy = new UserPolicy({
+        userId: req.user.userId,
+        policyProductId: req.body.policyProductId,
+        startDate: req.body.startDate,
+        endDate: new Date(new Date(req.body.startDate).getTime() + policy.termMonths * 30 * 24 * 60 * 60 * 1000),
+        status: 'Pending',
+        nominee: req.body.nominee
+      });
+      await userPolicy.save();
+      console.log('User policy saved:', userPolicy);
+      res.json({ success: true, message: 'Policy purchased successfully', userPolicy });
+    } catch (err) {
+      console.error('Error in purchasePolicy:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // Make payment for a policy
   async makePayment(req, res) {
-    const { error, value } = paymentSchema.validate(req.body);
-    if (error) return res.status(400).json({ success: false, error: error.details });
-    const { userPolicyId, amount, method, reference } = value;
-    const userPolicy = await UserPolicy.findById(userPolicyId);
-    if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
-    const payment = await Payment.create({
-      userId: req.user.userId,
-      userPolicyId,
-      amount,
-      method,
-      reference: reference || `PAY_${Date.now()}`
-    });
-    userPolicy.premiumPaid = (userPolicy.premiumPaid || 0) + amount;
-    await userPolicy.save();
-    res.json({ success: true, payment });
+    try {
+      const { error } = paymentSchema.validate(req.body);
+      if (error) {
+        return res.status(400).json({ success: false, message: error.details[0].message });
+      }
+      const userPolicy = await UserPolicy.findById(req.body.userPolicyId);
+      if (!userPolicy) {
+        return res.status(404).json({ success: false, message: 'User policy not found' });
+      }
+      const payment = new Payment({
+        userId: req.user.userId,
+        userPolicyId: req.body.userPolicyId,
+        amount: req.body.amount,
+        method: req.body.method,
+        reference: req.body.reference
+      });
+      await payment.save();
+      res.json({ success: true, message: 'Payment successful', payment });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // View payment history
@@ -110,17 +254,28 @@ const customerController = {
 
   // View purchased policies
   async myPolicies(req, res) {
-    const policies = await UserPolicy.find({ userId: req.user.userId }).populate('policyProductId');
-    const result = policies.map(p => ({
-      userPolicyId: p._id,
-      status: p.status,
-      verificationType: p.verificationType,
-      policy: p.policyProductId,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      nominee: p.nominee
-    }));
-    res.json({ success: true, policies: result });
+    try {
+      console.log('=== CUSTOMER MY POLICIES REQUEST ===');
+      console.log('User info:', req.user);
+      
+      const policies = await UserPolicy.find({ userId: req.user.userId }).populate('policyProductId');
+      console.log('Found user policies:', policies.length);
+      
+      const result = policies.map(p => ({
+        userPolicyId: p._id,
+        status: p.status,
+        verificationType: p.verificationType,
+        policy: p.policyProductId,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        nominee: p.nominee
+      }));
+      
+      res.json({ success: true, policies: result });
+    } catch (err) {
+      console.error('Error in myPolicies:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // Cancel a policy
@@ -185,6 +340,107 @@ const customerController = {
       res.json({ success: true, policy });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Get approved policies for the customer
+  async getApprovedPolicies(req, res) {
+    try {
+      const approvedPolicies = await UserPolicy.find({ userId: req.user.userId, approved: true })
+        .populate('policyProductId');
+      res.json({ success: true, policies: approvedPolicies });
+    } catch (err) {
+      console.error('Error fetching approved policies:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Get policies with completed payments (claimable policies)
+  async getClaimablePolicies(req, res) {
+    try {
+      console.log('=== GET CLAIMABLE POLICIES ===');
+      console.log('User ID:', req.user.userId);
+
+      // Get all payments for the user (all payments are considered completed)
+      const userPayments = await Payment.find({ 
+        userId: req.user.userId
+      }).populate({
+        path: 'userPolicyId',
+        populate: {
+          path: 'policyProductId'
+        }
+      });
+
+      console.log('User payments found:', userPayments.length);
+
+      // Extract unique policy IDs from payments
+      const policyIds = [...new Set(userPayments
+        .filter(payment => payment.userPolicyId) // Ensure userPolicyId exists
+        .map(payment => payment.userPolicyId._id.toString()))];
+      console.log('Unique policy IDs with payments:', policyIds.length);
+
+      // Get approved policies that have payments
+      const claimablePolicies = await UserPolicy.find({
+        _id: { $in: policyIds },
+        userId: req.user.userId,
+        approved: true
+      }).populate('policyProductId');
+
+      console.log('Claimable policies found:', claimablePolicies.length);
+      
+      res.json({ success: true, policies: claimablePolicies });
+    } catch (err) {
+      console.error('Error fetching claimable policies:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Get all claims for the customer
+  async getMyClaims(req, res) {
+    try {
+      console.log('=== GET MY CLAIMS REQUEST ===');
+      console.log('User:', req.user);
+
+      const Claim = (await import('../models/claim.js')).default;
+      const claims = await Claim.find({ userId: req.user.userId })
+        .populate('userId', 'name email')
+        .populate({
+          path: 'userPolicyId',
+          populate: {
+            path: 'policyProductId',
+            select: 'title code premium description'
+          }
+        })
+        .populate('decidedByAgentId', 'name email')
+        .sort({ createdAt: -1 });
+
+      console.log(`Found ${claims.length} claims for user ${req.user.userId}`);
+
+      // Calculate claim statistics
+      const stats = {
+        totalClaims: claims.length,
+        pendingClaims: claims.filter(claim => claim.status === 'Pending').length,
+        approvedClaims: claims.filter(claim => claim.status === 'Approved').length,
+        rejectedClaims: claims.filter(claim => claim.status === 'Rejected').length,
+        totalAmountClaimed: claims.reduce((sum, claim) => sum + (claim.amountClaimed || 0), 0),
+        approvedAmount: claims
+          .filter(claim => claim.status === 'Approved')
+          .reduce((sum, claim) => sum + (claim.amountClaimed || 0), 0)
+      };
+
+      res.json({ 
+        success: true, 
+        claims,
+        stats
+      });
+
+    } catch (err) {
+      console.error('Error in getMyClaims:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching claims',
+        error: err.message 
+      });
     }
   }
 };

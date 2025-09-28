@@ -31,8 +31,8 @@ export interface AdminErrorResponse {
   providedIn: 'root'
 })
 export class AdminService {
-  private userApiUrl = 'http://localhost:8000/api/v1/users';
-  private adminApiUrl = 'http://localhost:8000/api/v1/admin';
+  private userApiUrl = 'http://localhost:3000/api/v1/users';
+  private adminApiUrl = 'http://localhost:3000/api/v1/admin';
 
   constructor(private http: HttpClient) {}
 
@@ -71,6 +71,11 @@ export class AdminService {
   // Store admin data
   setAdminData(admin: any): void {
     localStorage.setItem('admin_data', JSON.stringify(admin));
+    // Also set token and userRole for AuthGuard compatibility
+    if (admin.token) {
+      localStorage.setItem('token', admin.token);
+    }
+    localStorage.setItem('userRole', 'Admin');
   }
 
   // Get admin data
@@ -88,6 +93,9 @@ export class AdminService {
   logout(): void {
     this.clearToken();
     this.clearAdminData();
+    // Also clear token and userRole used by AuthGuard
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
   }
 
   // Get authorization headers for admin API calls

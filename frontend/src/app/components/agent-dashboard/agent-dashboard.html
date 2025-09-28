@@ -1,1 +1,211 @@
-<p>agent-dashboard works!</p>
+<!-- Agent Dashboard -->
+<div class="min-h-screen bg-gray-100 flex relative">
+  <!-- Sidebar -->
+  <div class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform transition duration-200 ease-in-out z-50" [class."-translate-x-full"]="!sidebarOpen" [class.translate-x-0]="sidebarOpen">
+    <!-- Logo -->
+    <div class="flex items-center px-4">
+      <svg class="h-8 w-8 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+      </svg>
+      <span class="text-2xl font-bold">Agent Panel</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-10">
+      <a href="javascript:void(0)" (click)="currentSection = 'dashboard'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'customers'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-users mr-2"></i> My Customers
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'assignedPolicies'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-shield-alt mr-2"></i> Assigned Policies
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'assignedClaims'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-file-medical mr-2"></i> Assigned Claims
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'applications'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-file-contract mr-2"></i> Applications
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'sales'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-handshake mr-2"></i> Sales
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'commission'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-dollar-sign mr-2"></i> Commission
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'performance'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-chart-line mr-2"></i> Performance
+      </a>
+      <a href="javascript:void(0)" (click)="currentSection = 'settings'" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+        <i class="fas fa-cog mr-2"></i> Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Sidebar Toggle Button (Fixed Position) -->
+  <button (click)="toggleSidebar()" class="fixed left-4 top-20 z-50 bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg shadow-lg transition duration-200">
+    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
+  <!-- Main Content - Fixed position, doesn't move -->
+  <div class="flex-1 flex flex-col overflow-hidden ml-64">
+    <!-- Top Navigation -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Agent Dashboard</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-gray-700">Welcome, {{agentName}}</span>
+            <button (click)="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-200">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+      <div class="container mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+          <!-- Assigned Policies -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-blue-500 bg-blue-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Assigned Policies</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.assignedPolicies}}</p>
+            </div>
+          </div>
+
+          <!-- Sold Policies -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-green-500 bg-green-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Sold Policies</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.soldPolicies}}</p>
+            </div>
+          </div>
+
+          <!-- Pending Applications -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-orange-500 bg-orange-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Pending Applications</p>
+              <p class="text-lg font-semibold text-gray-700">{{stats.pendingApplications}}</p>
+            </div>
+          </div>
+
+          <!-- Monthly Commission -->
+          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs">
+            <div class="p-3 mr-4 text-purple-500 bg-purple-100 rounded-full">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="mb-2 text-sm font-medium text-gray-600">Monthly Commission</p>
+              <p class="text-lg font-semibold text-gray-700">${{stats.monthlyCommission}}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow-xs">
+          <div class="p-4 border-b border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-800">Recent Sales Activities</h4>
+          </div>
+          <div class="p-4">
+            <div class="space-y-4">
+              <div *ngFor="let activity of recentActivities" class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900">{{activity.type}}</p>
+                    <p class="text-sm text-gray-500">{{activity.customer}} • {{activity.timestamp}}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-semibold text-green-600">{{activity.amount}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assigned Policies Section -->
+        <div *ngIf="currentSection === 'assignedPolicies'" class="bg-white rounded-lg shadow-xs mt-8">
+          <div class="p-4 border-b border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-800">Assigned Policies</h4>
+          </div>
+          <div class="p-4">
+            <div *ngIf="assignedPoliciesList.length > 0; else noAssigned">
+              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div *ngFor="let policy of assignedPoliciesList" class="border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h5 class="font-semibold text-blue-900 text-lg mb-2">{{policy.policyName}}</h5>
+                  <p class="text-sm text-gray-500 mb-1">Policy ID: {{policy.policyId}}</p>
+                </div>
+              </div>
+            </div>
+            <ng-template #noAssigned>
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-2"></i>
+                <p class="text-lg">No assigned policies found</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- Assigned Claims Section -->
+        <div *ngIf="currentSection === 'assignedClaims'" class="bg-white rounded-lg shadow-xs mt-8">
+          <div class="p-4 border-b border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-800">Assigned Claims</h4>
+          </div>
+          <div class="p-4">
+            <div *ngIf="assignedClaimsList.length > 0; else noAssignedClaims">
+              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div *ngFor="let claim of assignedClaimsList" class="border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h5 class="font-semibold text-green-900 text-lg mb-2">Claim ID: {{claim._id}}</h5>
+                  <p class="text-sm text-gray-500 mb-1">Policy ID: {{claim.userPolicyId?._id || claim.userPolicyId}}</p>
+                  <p class="text-sm text-gray-500 mb-1">Customer: {{claim.userId?.name || claim.userId}}</p>
+                  <p class="text-sm text-gray-500 mb-1">Status: {{claim.status}}</p>
+                  <p class="text-sm text-gray-500 mb-1">Amount Claimed: {{claim.amountClaimed}}</p>
+                  <p class="text-sm text-gray-500 mb-1">Incident Type: {{claim.incidentType}}</p>
+                </div>
+              </div>
+            </div>
+            <ng-template #noAssignedClaims>
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-2"></i>
+                <p class="text-lg">No assigned claims found</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

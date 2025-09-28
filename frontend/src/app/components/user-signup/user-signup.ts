@@ -59,7 +59,7 @@ export class UserSignup {
     console.log('Sending registration data to backend:', registrationData);
 
     // Call backend API
-    this.http.post('http://localhost:8000/api/v1/users/register', registrationData)
+    this.http.post('http://localhost:3000/api/v1/users/register', registrationData)
       .subscribe({
         next: (response: any) => {
           this.isLoading = false;

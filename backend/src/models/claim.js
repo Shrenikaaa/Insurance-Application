@@ -18,6 +18,12 @@ const ClaimSchema = new mongoose.Schema({
     type: Date, 
     required: true 
     },
+  incidentType: 
+  { 
+    type: String,
+    enum: ['Accident', 'Theft', 'Natural Disaster', 'Medical Emergency', 'Property Damage', 'Other'],
+    default: 'Other'
+    },
   description: 
   { 
     type: String , 
