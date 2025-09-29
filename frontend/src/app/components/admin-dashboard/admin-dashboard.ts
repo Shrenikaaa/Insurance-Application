@@ -125,6 +125,9 @@ export class AdminDashboard implements OnInit {
   showClaimRejectionModal = false;
   showClaimDetailsModal = false;
 
+  // Purchased User Policies for Admin
+  userPolicies: any[] = [];
+
   currentSection = 'policies'; // Track the current section (policies, agents, pendingPolicies, approvedPolicies, payments, customerDetails, claims)
 
   // Navigation methods
@@ -214,6 +217,7 @@ export class AdminDashboard implements OnInit {
     this.loadAgents();
     this.loadPendingPolicies();
     this.loadApprovedPolicies();
+    this.loadUserPolicies();
   }
   
   testAPIConnection() {
@@ -303,8 +307,8 @@ export class AdminDashboard implements OnInit {
 
   // Policy Management Methods
   loadPolicies() {
-    console.log('Loading policies from API...');
-    this.policyService.getAllPolicies().subscribe({
+  console.log('Loading all policies from API...');
+  this.policyService.getAllPolicies().subscribe({
       next: (response) => {
         console.log('API Response:', response);
         if (response.success && response.policies) {
@@ -338,15 +342,11 @@ export class AdminDashboard implements OnInit {
             });
           });
         } else {
-          console.log('API returned no policies, using fallback');
-          this.loadMockPolicies();
+          console.error('No policies found or API error:', response);
         }
       },
       error: (error) => {
-        console.error('Error loading policies from API:', error);
-        console.log('Using mock data as fallback');
-        // Fallback to mock data for development
-        this.loadMockPolicies();
+        console.error('Error loading available policies:', error);
       }
     });
   }
@@ -1429,5 +1429,43 @@ PAYMENT ${index + 1}:
   closeClaimDetailsModal() {
     this.showClaimDetailsModal = false;
     this.selectedClaim = null;
+  }
+
+  // Purchased User Policies for Admin
+  loadUserPolicies() {
+    const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
+    const headers = { 'Authorization': `Bearer ${token}` };
+    this.http.get<any>('http://localhost:3000/api/v1/admin/userpolicies', { headers }).subscribe({
+      next: (response) => {
+        if (response.success && response.policies) {
+          this.userPolicies = response.policies;
+          console.log('User policies loaded for admin:', this.userPolicies);
+        } else {
+          this.userPolicies = [];
+          console.error('Failed to load user policies:', response.message);
+        }
+      },
+      error: (err) => {
+        this.userPolicies = [];
+        console.error('Error loading user policies:', err);
+      }
+    });
+  }
+
+  getStatusColor(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return 'bg-green-200 text-green-800';
+      case 'pending':
+        return 'bg-yellow-200 text-yellow-800';
+      case 'rejected':
+        return 'bg-red-200 text-red-800';
+      case 'active':
+        return 'bg-blue-200 text-blue-800';
+      case 'paid':
+        return 'bg-purple-200 text-purple-800';
+      default:
+        return 'bg-gray-200 text-gray-800';
+    }
   }
 }

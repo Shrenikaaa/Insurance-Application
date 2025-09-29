@@ -146,4 +146,10 @@ export class PolicyService {
       });
     });
   }
+
+  getAvailablePolicies(): Observable<PolicyResponse> {
+    return this.http.get<PolicyResponse>(`${this.apiUrl}/availablepolicies`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }

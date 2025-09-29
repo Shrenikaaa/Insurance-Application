@@ -11,7 +11,10 @@ export interface PolicyProduct {
   description: string;
   termMonths: number;
   tenureMonths: number;
+  tenure?: number; // Added for compatibility
   minSumInsured: number;
+  price?: number; // Added for price display
+  coverage?: string; // Added for coverage display
   status: string;
   assignedAgentId?: string;
   assignedAgentName?: string;
@@ -298,8 +301,15 @@ export class CustomerService {
     );
   }
 
-  // Get approved policies for the customer
+  // Get approved policies for the customer (user's approved policies)
   getApprovedPolicies(): Observable<any> {
     return this.http.get<any>(`http://localhost:3000/api/v1/admin/approvedpolicies`);
+  }
+
+  // Get available policies for purchase (admin-created policies)
+  getAvailablePoliciesForPurchase(): Observable<any> {
+    return this.http.get<any>(`http://localhost:3000/api/v1/customers/availablepolicies`, {
+      headers: this.getAuthHeaders()
+    });
   }
 }

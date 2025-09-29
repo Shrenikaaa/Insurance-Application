@@ -147,7 +147,7 @@ export class CustomerDashboard implements OnInit {
 
   showBuyPolicy() {
     this.currentSection = 'buyPolicy';
-    this.loadApprovedPolicies();
+    this.loadAvailablePoliciesForPurchase(); // Load admin-created policies for purchase
   }
 
   showPayments() {
@@ -173,22 +173,42 @@ export class CustomerDashboard implements OnInit {
     this.calculateStats();
   }
 
-  loadAvailablePolicies() {
-    console.log('Loading available policies...');
-    this.customerService.getAvailablePolicies().subscribe({
-      next: (response) => {
-        if (response.success && response.policies) {
-          this.availablePolicies = response.policies;
-          console.log('Available policies loaded:', this.availablePolicies);
-        } else {
-          console.error('Failed to load policies:', response.message);
-        }
-      },
-      error: (err) => {
-        console.error('Error loading policies:', err);
+  // loadAvailablePolicies() {
+  //   console.log('Loading available policies...');
+  //   this.customerService.getAvailablePolicies().subscribe({
+  //     next: (response) => {
+  //       if (response.success && response.policies) {
+  //         this.availablePolicies = response.policies;
+  //         console.log('Available policies loaded:', this.availablePolicies);
+  //       } else {
+  //         console.error('Failed to load policies:', response.message);
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error loading policies:', err);
+  //     }
+  //   });
+  // }
+
+  // filepath: c:\Users\Ascendion\Desktop\Insurance-App\Insurance-Application\frontend\src\app\components\customer-dashboard\customer-dashboard.component.ts
+loadAvailablePolicies() {
+  const token = localStorage.getItem('token') || localStorage.getItem('customer_token');
+  const headers = { 'Authorization': `Bearer ${token}` };
+
+  this.http.get('http://localhost:3000/api/v1/customers/availablepolicies', { headers }).subscribe({
+    next: (response: any) => {
+      if (response.success) {
+        this.availablePolicies = response.policies || [];
+      } else {
+        this.availablePolicies = [];
       }
-    });
-  }
+    },
+    error: (error) => {
+      console.error('Error loading available policies:', error);
+      this.availablePolicies = [];
+    }
+  });
+}
 
   loadMyPolicies() {
     console.log('Loading my policies...');
@@ -248,6 +268,25 @@ export class CustomerDashboard implements OnInit {
       error: (err: any) => {
         console.error('Error loading approved policies:', err);
         this.approvedPolicies = [];
+      }
+    });
+  }
+
+  loadAvailablePoliciesForPurchase() {
+    console.log('Loading available policies for purchase...');
+    this.customerService.getAvailablePoliciesForPurchase().subscribe({
+      next: (response: { success: boolean; policies?: any[]; message?: string }) => {
+        if (response.success && response.policies) {
+          this.availablePolicies = response.policies;
+          console.log('Available policies for purchase loaded:', this.availablePolicies);
+        } else {
+          console.error('Failed to load available policies:', response.message);
+          this.availablePolicies = [];
+        }
+      },
+      error: (err: any) => {
+        console.error('Error loading available policies:', err);
+        this.availablePolicies = [];
       }
     });
   }
@@ -366,17 +405,20 @@ export class CustomerDashboard implements OnInit {
     this.showPaymentModal = true;
   }
 
-  // Payment for approved policies (different structure)
+  // Open purchase modal for admin-created policies
   openPaymentModalForApproved(policy: any) {
-    // Handle both admin response format and formatted policy format
+    // This should open purchase modal, not payment modal
+    // Since these are admin-created policies available for purchase
     this.selectedPolicy = policy;
-    this.paymentForm = {
-      userPolicyId: policy.userPolicyId || policy._id || '', // Use userPolicyId if available, or policy ID
-      amount: policy.policyPrice || policy.minSumInsured / 12 || 100, // Use policyPrice if available
-      method: 'Simulated',
-      reference: `PAY_${Date.now()}_APPROVED`
+    this.purchaseForm = {
+      policyProductId: policy.policyId || policy._id,
+      startDate: '',
+      nominee: {
+        name: '',
+        relation: ''
+      }
     };
-    this.showPaymentModal = true;
+    this.showPurchaseModal = true;
   }
 
   closePaymentModal() {
@@ -698,5 +740,22 @@ ${claim.decidedByAgentId ? 'Reviewed by: ' + (claim.decidedByAgentId.name || 'Ag
           this.cancellingPolicy = false;
         }
       });
+  }
+
+  getStatusColor(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return 'bg-green-200 text-green-800';
+      case 'pending':
+        return 'bg-yellow-200 text-yellow-800';
+      case 'rejected':
+        return 'bg-red-200 text-red-800';
+      case 'active':
+        return 'bg-blue-200 text-blue-800';
+      case 'paid':
+        return 'bg-purple-200 text-purple-800';
+      default:
+        return 'bg-gray-200 text-gray-800';
+    }
   }
 }

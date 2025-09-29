@@ -4,6 +4,7 @@ import Joi from 'joi';
 import UserPolicy from '../models/userPolicy.js';
 import Payment from '../models/payment.js';
 import Claim from '../models/claim.js';
+import PolicyProduct from '../models/policyProduct.js';
 
 const agentLoginSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -57,6 +58,7 @@ const agentController = {
       res.status(500).json({ success: false, error: err.message });
     }
   },
+
   // Approve claim (agent)
   async approveClaim(req, res) {
     const { claimId } = req.body;
@@ -76,9 +78,7 @@ const agentController = {
 
   // View policies assigned to agent
   async assignedPolicies(req, res) {
-    // Allow retrieval by agentId from query or authenticated agent
     const agentId = req.query.agentId || req.user.userId;
-    const PolicyProduct = (await import('../models/policyProduct.js')).default;
     // Find products assigned to agent
     const assignedProducts = await PolicyProduct.find({ assignedAgentId: agentId });
     const productIds = assignedProducts.map(p => p._id);
@@ -132,7 +132,8 @@ const agentController = {
     });
     res.json({ success: true, claim });
   },
-   // View all claims for policies assigned to the agent
+
+  // View all claims for policies assigned to the agent
   async assignedClaims(req, res) {
     try {
       // Find all user policies where this agent is assigned
@@ -145,23 +146,29 @@ const agentController = {
       res.status(500).json({ success: false, error: err.message });
     }
   },
-  // Get details for a specific claim by claimId (agent)
-  async getClaimById(req, res) {
+
+  // Assigned policies for agent dashboard (for /assignedpolicies route)
+  async getAssignedPolicies(req, res) {
     try {
-      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
-      if (!claim) {
-        return res.status(404).json({ success: false, message: 'Claim not found' });
-      }
-      // Only allow agent to view claim if they are assigned to the policy
-      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
-      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
-      }
-      res.json({ success: true, claim });
-    } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
+      const agentId = req.user._id;
+      const policies = await PolicyProduct.find({ assignedAgentId: agentId });
+      res.json({ success: true, policies });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching assigned policies' });
     }
-  },
+  }
+};
+
+// Assign agent to claim (for admin usage)
+export const assignClaimToAgent = async (req, res) => {
+  const { claimId, agentId } = req.body;
+  const claim = await Claim.findById(claimId);
+  if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
+  const agent = await Agent.findById(agentId);
+  if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+  claim.decidedByAgentId = agentId;
+  await claim.save();
+  res.json({ success: true, claim });
 };
 
 export default agentController;

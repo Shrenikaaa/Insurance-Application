@@ -9,6 +9,7 @@ const agentAuth = [authenticateToken, authorizeRoles('Agent')];
 router.post('/login', loginAgent);
 router.get('/assignedpolicies', agentAuth, agentController.assignedPolicies);
 router.get('/assignedpayments', agentAuth, agentController.assignedPayments);
+router.get('/assignedpolicies', agentAuth, agentController.getAssignedPolicies);
 router.post('/approvepolicy', agentAuth, agentController.approvePolicy);
 router.post('/addclaim', agentAuth, agentController.addClaim);
 router.post('/approveclaim', agentAuth, agentController.approveClaim);

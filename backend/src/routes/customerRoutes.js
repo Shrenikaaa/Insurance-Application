@@ -21,23 +21,21 @@ router.get('/hello', (req, res) => {
   res.send('Hello from customer routes!');
 });
 
-router.get('/policies', customerAuth, customerController.viewPolicies);
-router.post('/purchase', customerAuth, customerController.purchasePolicy);
-router.post('/pay', customerAuth, customerController.makePayment);
-router.get('/payments', customerAuth, customerController.paymentHistory);
-router.get('/mypolicies', customerAuth, customerController.myPolicies);
-router.post('/raiseclaim', customerAuth, customerController.raiseClaim);
-router.get('/myclaims', customerAuth, customerController.getMyClaims);
-router.post('/cancelpolicy', customerAuth, customerController.cancelPolicy);
-// Get a policy by its ID
-router.get('/policy/:id', customerAuth, customerController.getPolicyById);
-// Get details for a specific claim by claimId
-router.get('/claim/:id', customerAuth, customerController.getClaimById);
-// Get approved policies for the customer
-router.get('/approvedpolicies', customerAuth, customerController.getApprovedPolicies);
-// Get policies with completed payments (claimable policies)
-router.get('/claimablepolicies', customerAuth, customerController.getClaimablePolicies);
-
+router.get('/policies', ...customerAuth, customerController.viewPolicies);
+router.post('/purchase', ...customerAuth, customerController.purchasePolicy);
+router.post('/pay', ...customerAuth, customerController.makePayment);
+router.get('/payments', ...customerAuth, customerController.paymentHistory);
+router.get('/policies', ...customerAuth, customerController.viewPolicies);
+// router.post('/purchase', ...customerAuth, customerController.purchasePolicy);
+// router.post('/pay', ...customerAuth, customerController.makePayment);
+router.get('/payments', ...customerAuth, customerController.paymentHistory);
+router.get('/claimablepolicies', ...customerAuth, customerController.getClaimablePolicies);
+router.get('/approvedpolicies', ...customerAuth, customerController.getApprovedPolicies);
+router.get('/availablepolicies', authenticateToken, authorizeRoles('Customer','Admin'), customerController.getAvailablePolicies);
+router.post('/raiseclaim', ...customerAuth, customerController.raiseClaim);
+router.get('/myclaims', ...customerAuth, customerController.getMyClaims);
 console.log('=== CUSTOMER ROUTES REGISTERED SUCCESSFULLY ===');
+console.log('=== RAISECLAIM ROUTE REGISTERED ===');
+console.log('=== MYCLAIMS ROUTE REGISTERED ===');
 
 export default router;

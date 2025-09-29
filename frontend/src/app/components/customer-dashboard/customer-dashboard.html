@@ -161,7 +161,7 @@
             </div>
             <div class="p-4">
               <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <div *ngFor="let policy of approvedPolicies" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div *ngFor="let policy of availablePolicies" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div class="text-center">
                     <h5 class="font-semibold text-gray-900 text-lg mb-2">{{policy.title || 'Untitled Policy'}}</h5>
                     <div class="flex justify-end mb-2">
@@ -177,16 +177,16 @@
                         <span class="font-medium">Type:</span> {{policy.type || 'General Insurance'}}
                       </p>
                       <p class="text-sm text-gray-600">
-                        <span class="font-medium">Min Sum Insured:</span> ${{policy.minSumInsured || '0' | number}}
+                        <span class="font-medium">Price:</span> ${{policy.price || '0' | number}}
                       </p>
                       <p class="text-sm text-gray-600">
-                        <span class="font-medium">Term:</span> {{policy.termMonths || 'N/A'}} months
+                        <span class="font-medium">Coverage:</span> {{policy.coverage || 'N/A'}}
                       </p>
                       <p class="text-sm text-gray-600">
-                        <span class="font-medium">Tenure:</span> {{policy.tenureMonths || 'N/A'}} months
+                        <span class="font-medium">Tenure:</span> {{policy.tenure || 'N/A'}} months
                       </p>
                       <p class="text-sm text-gray-600">
-                        <span class="font-medium">Status:</span> {{policy.status || 'Active'}}
+                        <span class="font-medium">Status:</span> Available
                       </p>
                       <div class="text-sm text-gray-600 mt-3">
                         <span class="font-medium">Description:</span>
@@ -194,8 +194,8 @@
                       </div>
                     </div>
                     <button (click)="openPaymentModalForApproved(policy)" 
-                            class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors">
-                      Make Payment
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+                      Purchase Policy
                     </button>
                   </div>
                 </div>
@@ -331,25 +331,29 @@
               <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div *ngFor="let policy of approvedPolicies" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div class="flex justify-between items-start mb-3">
-                    <h5 class="text-lg font-semibold text-gray-800">{{policy.title}}</h5>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      Approved
+                    <h5 class="text-lg font-semibold text-gray-800">{{policy.policyTitle || policy.title || 'Untitled Policy'}}</h5>
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" 
+                          [ngClass]="getStatusColor(policy.status || 'approved')">
+                      {{(policy.status || 'Approved') | uppercase}}
                     </span>
                   </div>
                   <div class="space-y-2 mb-4">
                     <p class="text-sm text-gray-600">
-                      <span class="font-medium">Code:</span> {{policy.code}}
+                      <span class="font-medium">Code:</span> {{policy.policyCode || policy.code || 'N/A'}}
                     </p>
                     <p class="text-sm text-gray-600">
-                      <span class="font-medium">Type:</span> {{policy.type}}
+                      <span class="font-medium">Customer:</span> {{policy.customerName || 'N/A'}}
                     </p>
                     <p class="text-sm text-gray-600">
-                      <span class="font-medium">Min Sum Insured:</span> ${{policy.minSumInsured}}
+                      <span class="font-medium">Price:</span> ${{policy.policyPrice || policy.price || '0' | number}}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      <span class="font-medium">Purchase Date:</span> {{policy.purchaseDate | date:'short'}}
                     </p>
                   </div>
                   <button (click)="openPaymentModalForApproved(policy)" 
-                          class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors">
-                    Make Payment
+                          class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+                    Purchase Policy
                   </button>
                 </div>
               </div>
