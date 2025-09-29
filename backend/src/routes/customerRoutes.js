@@ -36,8 +36,8 @@ router.get('/mypolicies', ...customerAuth, customerController.myPolicies);
 router.post('/cancelpolicy', ...customerAuth, customerController.cancelPolicy);
 router.post('/raiseclaim', ...customerAuth, customerController.raiseClaim);
 router.get('/myclaims', ...customerAuth, customerController.getMyClaims);
-console.log('=== CUSTOMER ROUTES REGISTERED SUCCESSFULLY ===');
-console.log('=== RAISECLAIM ROUTE REGISTERED ===');
-console.log('=== MYCLAIMS ROUTE REGISTERED ===');
+// console.log('=== CUSTOMER ROUTES REGISTERED SUCCESSFULLY ===');
+// console.log('=== RAISECLAIM ROUTE REGISTERED ===');
+// console.log('=== MYCLAIMS ROUTE REGISTERED ===');
 
 export default router;
