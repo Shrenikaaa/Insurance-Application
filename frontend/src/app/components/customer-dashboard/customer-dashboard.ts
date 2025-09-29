@@ -421,6 +421,41 @@ loadAvailablePolicies() {
     this.showPurchaseModal = true;
   }
 
+  // Open payment modal for policies (purchase policy first, then pay)
+  openPaymentModalForPolicy(policy: any) {
+    this.selectedPolicy = policy;
+    
+    // First purchase the policy to create a UserPolicy
+    const purchaseData = {
+      policyProductId: policy._id,
+      startDate: new Date(Date.now() + 24*60*60*1000).toISOString().split('T')[0], // Tomorrow's date
+      nominee: {
+        name: 'Default Nominee',
+        relation: 'Self'
+      }
+    };
+    
+    this.customerService.purchasePolicy(purchaseData).subscribe({
+      next: (response) => {
+        if (response.success && response.userPolicy) {
+          // Now open payment modal with the userPolicy ID
+          this.paymentForm = {
+            userPolicyId: response.userPolicy._id,
+            amount: policy.price || policy.minSumInsured || 1000,
+            method: 'Simulated',
+            reference: `PAY_${Date.now()}_POLICY`
+          };
+          this.showPaymentModal = true;
+        } else {
+          alert('Failed to purchase policy: ' + (response.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        alert('Error purchasing policy: ' + err.message);
+      }
+    });
+  }
+
   closePaymentModal() {
     this.showPaymentModal = false;
     this.selectedUserPolicy = null;

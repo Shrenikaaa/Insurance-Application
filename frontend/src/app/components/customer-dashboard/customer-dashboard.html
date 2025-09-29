@@ -193,9 +193,9 @@
                         <p class="mt-1 text-xs">{{policy.description || 'Comprehensive insurance coverage for your protection and peace of mind.'}}</p>
                       </div>
                     </div>
-                    <button (click)="openPaymentModalForApproved(policy)" 
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
-                      Purchase Policy
+                    <button (click)="openPaymentModalForPolicy(policy)" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors">
+                      Make Payment
                     </button>
                   </div>
                 </div>
@@ -351,9 +351,9 @@
                       <span class="font-medium">Purchase Date:</span> {{policy.purchaseDate | date:'short'}}
                     </p>
                   </div>
-                  <button (click)="openPaymentModalForApproved(policy)" 
-                          class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
-                    Purchase Policy
+                  <button (click)="openPaymentModalForPolicy(policy)" 
+                          class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors">
+                    Make Payment
                   </button>
                 </div>
               </div>
