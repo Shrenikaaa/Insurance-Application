@@ -45,6 +45,7 @@ export interface MyPolicyResponse {
   policy: PolicyProduct;
   startDate: Date;
   endDate: Date;
+  premiumPaid?: number;
   nominee?: {
     name: string;
     relation: string;
@@ -219,6 +220,7 @@ export class CustomerService {
           {
             userPolicyId: 'user-policy-1',
             status: 'Approved',
+            premiumPaid: 1500,
             policy: {
               _id: 'mock-1',
               code: 'LIFE-001',

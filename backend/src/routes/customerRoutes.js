@@ -32,6 +32,8 @@ router.get('/payments', ...customerAuth, customerController.paymentHistory);
 router.get('/claimablepolicies', ...customerAuth, customerController.getClaimablePolicies);
 router.get('/approvedpolicies', ...customerAuth, customerController.getApprovedPolicies);
 router.get('/availablepolicies', authenticateToken, authorizeRoles('Customer','Admin'), customerController.getAvailablePolicies);
+router.get('/mypolicies', ...customerAuth, customerController.myPolicies);
+router.post('/cancelpolicy', ...customerAuth, customerController.cancelPolicy);
 router.post('/raiseclaim', ...customerAuth, customerController.raiseClaim);
 router.get('/myclaims', ...customerAuth, customerController.getMyClaims);
 console.log('=== CUSTOMER ROUTES REGISTERED SUCCESSFULLY ===');

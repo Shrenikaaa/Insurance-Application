@@ -508,6 +508,13 @@ loadAvailablePolicies() {
     this.loadClaimablePolicies(); // Load policies with completed payments for claim form
   }
 
+  openClaimModal(policy: any) {
+    // Set the selected policy for claim and navigate to File Claim section
+    this.selectedPolicy = policy;
+    this.claimForm.userPolicyId = policy.userPolicyId;
+    this.showFileClaim(); // Navigate to file claim section with pre-selected policy
+  }
+
   // Claims Data Loading
   loadMyClaims() {
     this.loadingClaims = true;

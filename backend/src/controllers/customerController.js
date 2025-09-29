@@ -136,8 +136,132 @@ const customerController = {
     }
   },
   async paymentHistory(req, res) { res.status(501).json({ success: false, message: 'Not implemented' }); },
-  async myPolicies(req, res) { res.status(501).json({ success: false, message: 'Not implemented' }); },
-  async cancelPolicy(req, res) { res.status(501).json({ success: false, message: 'Not implemented' }); },
+  async myPolicies(req, res) {
+    try {
+      console.log('=== GET MY POLICIES REQUEST ===');
+      console.log('User:', req.user);
+
+      // Get all user policies for the logged-in customer
+      const userPolicies = await UserPolicy.find({ userId: req.user.userId })
+        .populate('policyProductId')
+        .sort({ createdAt: -1 });
+
+      console.log('Found user policies:', userPolicies.length);
+
+      if (!userPolicies || userPolicies.length === 0) {
+        return res.status(200).json({ 
+          success: true, 
+          policies: [], 
+          message: 'No policies found' 
+        });
+      }
+
+      // Transform the data to match frontend expectations
+      const formattedPolicies = userPolicies.map(userPolicy => {
+        const policy = userPolicy.policyProductId;
+        return {
+          userPolicyId: userPolicy._id,
+          status: userPolicy.status,
+          startDate: userPolicy.startDate,
+          endDate: userPolicy.endDate,
+          premiumPaid: userPolicy.premiumPaid || 0,
+          nominee: userPolicy.nominee,
+          policy: {
+            _id: policy._id,
+            code: policy.code,
+            title: policy.title || policy.name,
+            type: policy.type,
+            description: policy.description,
+            termMonths: policy.termMonths || policy.tenureMonths,
+            tenureMonths: policy.tenureMonths || policy.termMonths,
+            minSumInsured: policy.minSumInsured,
+            status: policy.status,
+            createdAt: policy.createdAt
+          }
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        policies: formattedPolicies,
+        message: 'My policies retrieved successfully'
+      });
+    } catch (err) {
+      console.error('Error getting my policies:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error retrieving my policies', 
+        error: err.message 
+      });
+    }
+  },
+  async cancelPolicy(req, res) {
+    try {
+      console.log('=== CANCEL POLICY REQUEST ===');
+      console.log('Request body:', req.body);
+      console.log('User:', req.user);
+
+      const { userPolicyId } = req.body;
+
+      if (!userPolicyId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'User Policy ID is required' 
+        });
+      }
+
+      // Find the user policy to cancel
+      const userPolicy = await UserPolicy.findById(userPolicyId);
+      if (!userPolicy) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'User policy not found' 
+        });
+      }
+
+      // Check if the policy belongs to the requesting user
+      if (userPolicy.userId.toString() !== req.user.userId.toString()) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'You are not authorized to cancel this policy' 
+        });
+      }
+
+      // Check if policy can be cancelled (only Approved or Pending policies)
+      if (!['Approved', 'Pending'].includes(userPolicy.status)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Only Approved or Pending policies can be cancelled' 
+        });
+      }
+
+      // Update policy status to Cancelled
+      userPolicy.status = 'Cancelled';
+      userPolicy.cancelledAt = new Date();
+      await userPolicy.save();
+
+      console.log('Policy cancelled successfully:', userPolicy._id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Policy cancelled successfully',
+        userPolicy: {
+          _id: userPolicy._id,
+          status: userPolicy.status,
+          cancelledAt: userPolicy.cancelledAt
+        }
+      });
+    } catch (err) {
+      console.error('Error cancelling policy:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error cancelling policy', 
+        error: err.message 
+      });
+    }
+  },
+
+  // Claims related methods
   async getPolicyById(req, res) { res.status(501).json({ success: false, message: 'Not implemented' }); },
   async getApprovedPolicies(req, res) {
     try {

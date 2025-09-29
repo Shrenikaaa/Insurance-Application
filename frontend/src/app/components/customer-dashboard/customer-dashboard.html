@@ -225,31 +225,55 @@
                     <div class="flex-1">
                       <h5 class="font-semibold text-gray-900">{{policy.policy.title}}</h5>
                       <p class="text-sm text-gray-500">{{policy.policy.type}}</p>
-                      <p class="text-sm text-gray-600 mt-1">Coverage: ${{policy.policy.minSumInsured | number}}</p>
-                      <p class="text-sm text-gray-600">Start: {{policy.startDate | date:'shortDate'}}</p>
-                      <p class="text-sm text-gray-600">End: {{policy.endDate | date:'shortDate'}}</p>
+                      <div class="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-600">
+                        <div>
+                          <p><strong>Coverage:</strong> ${{policy.policy.minSumInsured | number}}</p>
+                          <p><strong>Start:</strong> {{policy.startDate | date:'shortDate'}}</p>
+                          <p><strong>End:</strong> {{policy.endDate | date:'shortDate'}}</p>
+                        </div>
+                        <div>
+                          <p><strong>Premium Paid:</strong> ${{(policy.premiumPaid || 0) | number}}</p>
+                          <p><strong>Nominee:</strong> {{policy.nominee?.name || 'Not Set'}}</p>
+                          <p><strong>Relation:</strong> {{policy.nominee?.relation || 'Not Set'}}</p>
+                        </div>
+                      </div>
                     </div>
                     <div class="text-right">
-                      <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full" 
-                            [class.bg-green-100]="policy.status === 'Approved'"
-                            [class.text-green-800]="policy.status === 'Approved'"
-                            [class.bg-yellow-100]="policy.status === 'Pending'"
-                            [class.text-yellow-800]="policy.status === 'Pending'"
-                            [class.bg-red-100]="policy.status === 'Cancelled'"
-                            [class.text-red-800]="policy.status === 'Cancelled'">
-                        {{policy.status}}
-                      </span>
-                      <div class="mt-2 space-x-2">
+                      <!-- Policy Status -->
+                      <div class="mb-2">
+                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full" 
+                              [ngClass]="getStatusColor(policy.status)">
+                          {{policy.status}}
+                        </span>
+                      </div>
+                      
+                      <!-- Payment Status -->
+                      <div class="mb-2">
+                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                              [ngClass]="{
+                                'bg-green-100 text-green-800': (policy.premiumPaid || 0) > 0,
+                                'bg-red-100 text-red-800': (policy.premiumPaid || 0) === 0
+                              }">
+                          {{(policy.premiumPaid || 0) > 0 ? 'Paid' : 'Unpaid'}}
+                        </span>
+                      </div>
+                      
+                      <!-- Action Buttons -->
+                      <div class="mt-2 space-x-1">
                         <button *ngIf="policy.status === 'Approved'" 
                                 (click)="openPaymentModal(policy)" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition duration-200">
+                                class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs transition duration-200 mb-1">
                           Make Payment
+                        </button>
+                        <button *ngIf="policy.status === 'Approved' && (policy.premiumPaid || 0) > 0" 
+                                (click)="openClaimModal(policy)" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition duration-200 mb-1">
+                          File Claim
                         </button>
                         <button *ngIf="policy.status === 'Approved'" 
                                 (click)="openCancelConfirmation(policy)" 
-                                style="background-color: #dc2626 !important; color: white !important; font-weight: bold !important; text-shadow: 1px 1px 2px black !important;"
-                                class="hover:bg-red-700 px-3 py-1 rounded text-xs transition duration-200">
-                          Cancel Policy
+                                class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition duration-200">
+                          Cancel
                         </button>
                       </div>
                     </div>
