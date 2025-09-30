@@ -493,12 +493,12 @@ const customerController = {
   // Get available policies for customers (admin-created policies)
   async getAvailablePolicies(req, res) {
     try {
-      console.log('=== GET AVAILABLE POLICIES REQUEST ===');
+      //console.log('=== GET AVAILABLE POLICIES REQUEST ===');
       console.log('User info:', req.user);
 
       // Fetch all policies (no status filter)
       const policies = await PolicyProduct.find();
-      console.log('Found policies:', policies);
+      //console.log('Found policies:', policies);
 
       if (!policies || policies.length === 0) {
         return res.status(404).json({ success: false, message: 'No available policies found' });
