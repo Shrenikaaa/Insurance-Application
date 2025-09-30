@@ -33,11 +33,12 @@ const adminController = {
         try {
             console.log('Loading all claims...');
             const Claim = (await import('../models/claim.js')).default;
-            
-            // Simple query without population for testing
-            const claims = await Claim.find().lean();
+            // Populate userId (customer) and userPolicyId (policy info)
+            const claims = await Claim.find()
+                .populate({ path: 'userId', select: 'name email' })
+                .populate({ path: 'userPolicyId', populate: { path: 'policyProductId', select: 'title code' } })
+                .lean();
             console.log(`Found ${claims.length} claims`);
-            
             res.json({ success: true, claims: claims || [] });
         } catch (err) {
             console.error('Error in allClaims:', err);

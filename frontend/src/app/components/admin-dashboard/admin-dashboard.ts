@@ -1183,37 +1183,37 @@ Thank you for your payment!
   }
 
   viewCustomerDetails(customer: any) {
-    const customerInfo = `
-CUSTOMER DETAILS
-================
+    let customerInfo = `CUSTOMER DETAILS\n================\n\n`;
+    customerInfo += `Name: ${customer.customer.name || 'Unknown'}\n`;
+    customerInfo += `Email: ${customer.customer.email || 'No email'}\n`;
+    customerInfo += `Role: ${customer.customer.role || 'Customer'}\n`;
+    customerInfo += `ID: ${customer.customer._id}\n`;
+    customerInfo += `Joined: ${new Date(customer.customer.createdAt).toLocaleString()}\n\n`;
 
-Name: ${customer.customer.name || 'Unknown'}
-Email: ${customer.customer.email || 'No email'}
-Role: ${customer.customer.role || 'Customer'}
-ID: ${customer.customer._id}
-Joined: ${new Date(customer.customer.createdAt).toLocaleString()}
+    customerInfo += `POLICY SUMMARY:\n`;
+    customerInfo += `Total Policies: ${customer.policies.length}\n`;
+    customerInfo += `Total Premium Value: $${customer.totalPremium?.toFixed(2)}\n`;
+    customerInfo += `Total Paid: $${customer.totalPaid?.toFixed(2)}\n\n`;
 
-POLICY SUMMARY:
-Total Policies: ${customer.policies.length}
-Total Premium Value: $${customer.totalPremium?.toFixed(2)}
-Total Paid: $${customer.totalPaid?.toFixed(2)}
+    customerInfo += `POLICIES:\n`;
+    customer.policies.forEach((policy: any, index: number) => {
+      customerInfo += `${index + 1}. ${policy.policyProductId?.title || 'Unknown Policy'} (${policy.policyProductId?.code || 'No code'})\n`;
+      customerInfo += `   Status: ${policy.status}\n`;
+      customerInfo += `   Start Date: ${policy.startDate ? new Date(policy.startDate).toLocaleDateString() : 'N/A'}\n`;
+      customerInfo += `   End Date: ${policy.endDate ? new Date(policy.endDate).toLocaleDateString() : 'N/A'}\n`;
+      customerInfo += `   Premium: $${policy.policyProductId?.premium?.toFixed(2) || '0.00'}\n`;
+      customerInfo += `   Sum Insured: $${policy.policyProductId?.minSumInsured || 'N/A'}\n`;
+      customerInfo += `   Type: ${policy.policyProductId?.type || 'N/A'}\n`;
+      customerInfo += `   Description: ${policy.policyProductId?.description || 'N/A'}\n\n`;
+    });
 
-POLICIES:
-${customer.policies.map((policy: any, index: number) => `
-${index + 1}. ${policy.policyProductId?.title || 'Unknown Policy'} (${policy.policyProductId?.code || 'No code'})
-   Status: ${policy.status}
-   Start Date: ${new Date(policy.startDate).toLocaleDateString()}
-   Premium: $${policy.policyProductId?.premium?.toFixed(2) || '0.00'}
-`).join('')}
+    customerInfo += `PAYMENT HISTORY:\n`;
+    customerInfo += `Total Payments: ${customer.payments.length}\n`;
+    customer.payments.forEach((payment: any, index: number) => {
+      customerInfo += `${index + 1}. $${payment.amount?.toFixed(2)} via ${payment.method} on ${new Date(payment.createdAt).toLocaleDateString()}\n`;
+      customerInfo += `   Reference: ${payment.reference || 'N/A'}\n`;
+    });
 
-PAYMENT HISTORY:
-Total Payments: ${customer.payments.length}
-${customer.payments.map((payment: any, index: number) => `
-${index + 1}. $${payment.amount?.toFixed(2)} via ${payment.method} on ${new Date(payment.createdAt).toLocaleDateString()}
-   Reference: ${payment.reference || 'N/A'}
-`).join('')}
-    `;
-    
     alert(customerInfo);
   }
 
