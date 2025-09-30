@@ -13,7 +13,7 @@ import { PolicyService, Policy, PolicyResponse } from '../../services/policy.ser
 })
 export class AdminDashboard implements OnInit {
   adminName = 'Admin User';
-  sidebarOpen = true; // Start with sidebar open
+  // Sidebar is always open; toggle functionality removed
   showPoliciesSection = true;
   showAgentsSection = false;
   agents: any[] = [];
@@ -126,7 +126,23 @@ export class AdminDashboard implements OnInit {
   showClaimDetailsModal = false;
 
   // Purchased User Policies for Admin
-  userPolicies: any[] = [];
+    userPolicies: any[] = [];
+    get dedupedUserPolicies(): any[] {
+        const seen = new Set();
+        return this.userPolicies.filter(policy => {
+          const code = policy.policyProductId?.code || '';
+          const title = policy.policyProductId?.title || '';
+          const status = policy.status || '';
+          // Ignore entries with missing code or title
+          if (!code && !title) return false;
+          const key = `${code}|${title}|${status}`;
+          if (seen.has(key)) {
+            return false;
+          }
+          seen.add(key);
+          return true;
+        });
+    }
 
   currentSection = 'policies'; // Track the current section (policies, agents, pendingPolicies, approvedPolicies, payments, customerDetails, claims)
 
@@ -271,9 +287,7 @@ export class AdminDashboard implements OnInit {
     });
   }
 
-  toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
+  // toggleSidebar method removed
 
   loadDashboardStats() {
     // Load dashboard statistics from API

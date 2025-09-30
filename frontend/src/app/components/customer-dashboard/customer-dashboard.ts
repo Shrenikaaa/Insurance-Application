@@ -23,7 +23,7 @@ export class CustomerDashboard implements OnInit {
     return this.myClaims ? this.myClaims.filter(c => c.status === 'Approved').slice(0, 5) : [];
   }
   customerName = 'Customer User';
-  sidebarOpen = true;
+  // Sidebar is always open; toggle functionality removed
   
   // Current section being displayed
   currentSection = 'dashboard'; // dashboard, availablePolicies, myPolicies, payments, paymentHistory
@@ -161,9 +161,7 @@ export class CustomerDashboard implements OnInit {
     this.loadPaymentHistory();
   }
 
-  toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
+  // toggleSidebar method removed
 
   // Data loading methods
   loadDashboardData() {
@@ -216,6 +214,7 @@ loadAvailablePolicies() {
       next: (response) => {
         console.log('My policies response:', response);
         if (response.success && response.policies) {
+          // Show all policies for the customer (no deduplication)
           this.myPolicies = response.policies.filter(p => p && p.policy && p.policy.title);
           console.log('My policies loaded:', this.myPolicies);
         } else {
@@ -258,8 +257,22 @@ loadAvailablePolicies() {
     this.customerService.getApprovedPolicies().subscribe({
       next: (response: { success: boolean; policies?: any[]; message?: string }) => {
         if (response.success && response.policies) {
-          this.approvedPolicies = response.policies;
-          console.log('Approved policies loaded:', this.approvedPolicies);
+          // Deduplicate for claim dropdown by policy name and code
+          const seen = new Set();
+          this.approvedPolicies = response.policies.filter(p => {
+            const name = p?.policyProductId?.title || p?.title || '';
+            const code = p?.policyProductId?.code || p?.code || '';
+            const key = name + '|' + code;
+            if (!name || !code) return false;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          // If deduplication removed all, fallback to original
+          if (this.approvedPolicies.length === 0 && response.policies.length > 0) {
+            this.approvedPolicies = response.policies;
+          }
+          console.log('Approved policies loaded (deduped for claim dropdown):', this.approvedPolicies);
         } else {
           console.error('Failed to load approved policies:', response.message);
           this.approvedPolicies = [];

@@ -159,6 +159,17 @@ const customerController = {
       // Transform the data to match frontend expectations
       const formattedPolicies = userPolicies.map(userPolicy => {
         const policy = userPolicy.policyProductId;
+        if (!policy) {
+          return {
+            userPolicyId: userPolicy._id,
+            status: userPolicy.status,
+            startDate: userPolicy.startDate,
+            endDate: userPolicy.endDate,
+            premiumPaid: userPolicy.premiumPaid || 0,
+            nominee: userPolicy.nominee,
+            policy: null
+          };
+        }
         return {
           userPolicyId: userPolicy._id,
           status: userPolicy.status,
